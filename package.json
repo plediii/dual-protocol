@@ -1,7 +1,7 @@
 {
-  "name": "dualapi",
-  "version": "0.11.6",
-  "description": "Framework for distributed javascript applications",
+  "name": "dual-protocol",
+  "version": "0.0.0",
+  "description": "Protocol layer for dual-api",
   "private": false,
   "main": "index.js",
   "scripts": {
@@ -9,22 +9,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/plediii/dualapi.git"
+    "url": "https://github.com/plediii/dual-protocol.git"
   },
   "keywords": [
     "dual",
     "rest",
-    "api",
-    "websocket",
-    "websockets",
-    "socket.io",
     "client",
-    "server"
+    "server",
+    "isomorphic"
   ],
   "author": "Paul J. Ledbetter III",
-  "license": "MIT",
+  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/plediii/dualapi/issues"
+    "url": "https://github.com/plediii/dual-protocol/issues"
   },
   "devDependencies": {
     "gulp": "^3.8.10",
@@ -35,7 +32,7 @@
   "dependencies": {
     "bluebird": "^2.2.2",
     "hevemitter": "^0.9.3",
-    "lodash": "^2.4.1",
+    "lodash": "^2.4.2",
     "uid-safe": "^1.0.2"
   }
 }
