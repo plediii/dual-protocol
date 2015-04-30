@@ -1,69 +1,73 @@
-# DualAPI
+# Dual Protocol
 
-A simple, lightweight, distributed application framework inspired by restful HTTP architectures.
+This is the protocol layer for dual-api.
 
-## Constructing domains
+Dual protocol is implemented on top of [HevEmitter](https://github.com/plediii/HevEmitter).  HevEmitter is a hierarchical event emitter.  HevEmitter provides the functionality to send messages to hierarchically organized functions.  
 
-DualAPI is centered around hosts mounted within domains.
-Communication within a domain is unrestricted, but cross domain
-communication must be performed by hosts.
+Dual protocol extends HevEmitter by constraining the format of the messages sent to the HevEmitter listeners.
 
-The dualapi module is the constructor for domains:
+## Constructing dual protocol domains
+
+Any process holding a dual protocol domain (including the mounted hosts) may send messages to any host in the domain without constraint on the destination.  
+
+The dual protocol module is the constructor for domains:
 ```javascript
-var dualapi = require('dualapi');
+var dualproto = require('dual-protocol');
 
-var domain = dualapi();
+var domain = dualproto();
 ```
+
+## Messages
+
+Dual protocol messages (named `ctxt` here) are similar in structure to HTTP requests.  Dual protocol messages consist in:
+* A destination address: `ctxt.to`.  
+* An optional source address: `ctxt.from`.
+* An optional body: `ctxt.body`.  
+* And an optional hash of meta data: `ctxt.options`.
+
+The destination and source should be an array of strings.  The message `body` and `options` should be a JSON serializable objects. The `body` and `options` are not required to be JSON serializable, however failing to adhere to this constraint will prevent messages from crossing some domain boundaries.
 
 ## Mounting a host
 
-Hosts are functions which accept a DualAPI message context.  Hosts are
-mounted hierarchically at url like addresses represented by arrays.
+A dual protocol `host` is a function which accepts dual protocol messages.  Hosts are mounted on the domain using the `mount` method.
+
+In addition to the attributes associated with a dual protocol messages, the `dual-protocol` object will automatically parse parameters declared in the destination address (prefixed with `:`), and provide these in the `ctxt.params` object.
+
+The `dual-protocol` object will also attach the domain on which the host is mounted at `ctxt.domain`.
+
 ```javascript
 domain.mount(['journal', ':name'], function (ctxt) {
-    console.log(ctxt.from.join('/') + ' published to the journal of ' + ctxt.params.name + ' : ', ctxt.body);
+    console.log(ctxt.from.join('/') + ' published to the journal of ' + ctxt.params.name + ' at the dual protocol address ' + ctxt.from.join('/') + '. The message is : ', ctxt.body);
 });
 ```
 
 ## Sending messages
 
-Messages can be sent to hosts via the  `domain.send(to, from, body)` command.
+Messages can be sent to hosts via the method `domain.send(to, from, body, options)`.
 ```javascript
 domain.send(['journal', 'bioinformatics'], ['scientist'], 'The Human Genome');
 ```
 
 Sending the above message results in the output:
 ```shell
-scientist published to the journal of bioinformatics :  The Human Genome
+scientist published to the journal of bioinformatics at the dual protocol address journal/bioinformatics.  The message is :  The Human Genome
 ```
 
-## Replying to messages
+## Replying to and forwarding messages
 
-Hosts naturally can communicate with one another.  DualAPI message
-context has convenience functions to facilitate this
-intercommunication.  
+At the protocol level, hosts may reply to one another by sending messages directly to the source address.  Hosts are not required to emit a reply.  Constraints on the reply may be enforced at the API level.  
 
-For instance the reply command inverts the `to` and `from` addresses,
-and sends a new `body`.  The following host would reply to all senders
-by prepending a string to their body:
+For instance we may mount a host that replies to source address like this:
 ```javascript
 domain.mount(['laboratory', 'supercomputer'], function (ctxt) {
-    ctxt.reply('Super Computed: ' + ctxt.body);
+    ctxt.send(['journal', 'bioinformatics'], ctxt.to, 'Super computed ' + ctxt.body);
 });
 ```
 
-Hosts may change their behavior based on the parameters associated
-with the message.  The following host will forward all messages to the
-`supercomputer`, unless the message is from the `supercompuer`, in
-which case the message is sent to be published. 
+The source address at the protocol layer may be forged.  This allows the implementation of proxy hosts.  For instance the following host mounted at scientist simply forwards his messages to the super computer:
 ```javascript
 domain.mount(['scientist'], function (ctxt) {
-    if (ctxt.from.join('/') === 'laboratory/supercomputer') {
-        domain.send(['journal', 'computation'], ['scientist'], ctxt.body);
-    }
-    else {
-        domain.send(['laboratory', 'supercomputer'], ['scientist'], ctxt.body);
-    }
+    domain.send(['laboratory', 'supercomputer'], ctxt.from, ctxt.body + ' by the scientist.');
 });
 ```
 
@@ -71,113 +75,30 @@ Messages sent to the scientist,
 ```javascript
 domain.send(['scientist'], ['gradstudent'], 'sequence alignment');
 ```
-would result in output such as
+would result in the following published output
 ```shell
-scientist published to the journal of computation :  Super Computed: sequence alignment
+  scientist published to the journal of bioinformatics at the dual protocol address journal/bioinformatics.  The message is :  Super computed sequence alignment by the scientist.
 ```
 
+## Mounting temporary addresses
 
-## Sending for reply only
-
- Note that in order to receive a reply, there must be a host mounted
-at the `from` address.  The `'gradstudent'` above would never be able
-to receive a message.
-
-The `domain.get` construct facilitiates sending messages for the
-purpose of receiving a reply by constructing an anonymous reply to
-address, and returning a promise for the response host.
+The `'gradstudent'` in the above example could not receive messages, since there is no host mounted at `['gradstudent']`.  However, the gradstudent can still communicate with the super computer directly, by using the `waitFor` method.  Unforgeable addresses can be produced using the `uid` method.
 
 ```javascript
-domain.get(['laboratory', 'supercomputer'], 'test data')
-.then(function (ctxt) {
-    console.log('super computer result: ', ctxt.body);
+domain.uid()
+.then(function (mailbox) {
+   domain.waitFor([mailbox])
+   .then(function (ctxt) {
+     console.log('Received in the mailbox: ', ctxt.body);
+   });
+   domain.send(['laboratory', 'supercomputer'], [mailbox], 'the fruit fly genome');
 });
 ```
 
-Producing the output:
+The above would result in the output:
 ```shell
-super computer result:  Super Computed: test data
+  Received in the mailbox: Super computed the fruit fly genome
 ```
-
-## Networked Hosts
-
-DualAPI domains may be connected across networks.  For instance via
-websockets.  
-
-### Server side
-
-Assuming the availability of `socket.io`, we could add a socket
-listener expecting a connection from alice:
-```javascript
-io.listen().on('connect', function (socket) {
-    domain.open(['alice'], socket);
-    domain.send(['alice', 'ready']);
-});
-```
-
-Upon any socket connection, the server would then transfer messages to
-`'alice'` to the socket, and translate messages coming over the socket
-to having a `from` address of `alice`.  
-
-Immediately after connecting the socket to the domain, a message will
-be sent to `ready` on the client domain.
-
-### Client side
-
-Then on the client side, Alice may construct her own domain, and use
-`socket.io` to connect to the server.
-
-```javascript
-var aliceDomain = dualapi();
-var socket = io.connect();
-aliceDomain.open(['server'], socket);
-```
-
-The server is set up to send a message to `ready` on successful
-connection.  Alice prepares to send a message to the `scientist` on
-the server above, immediately upon receipt.
-
-```javascript
-aliceDomain.mount(['ready'], function () {
-    aliceDomain.send(['server', 'scientist'], ['tip'], 'Alice data');
-});
-```
-
-On the server side then, we would see
-```shell
-scientist published to the journal of computation :  Super Computed: Alice data
-```
-
-Alice can create an alias for the server side `supercomputer`, by
-creating a host forwarding all such messages to the server.
-
-```javascript
-aliceDomain.mount(['supercomputer'], function (ctxt) {
-    ctxt.forward(['server', 'laboratory', 'supercomputer']);
-});
-```
-
-When connected, Alice could then interact with her `supercomputer`
-alias the same way she would on the server:
-```javascript
-aliceDomain.mount(['ready'], function () {
-    aliceDomain.get(['supercomputer'], 'alice super computer data')
-    .then(function (ctxt) {
-        console.log('client side super computer: ', ctxt.body);
-    });
-});
-```
-
-Resulting in output on the client side:
-```shell
-client side super computer:  Super Computed: alice super computer data
-```
-
-
-
-
-
-
 
 
 
