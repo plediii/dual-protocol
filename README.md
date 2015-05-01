@@ -1,16 +1,18 @@
-# Dual Protocol
+# Dual-protocol
 
 This is the protocol layer for dual-api.
 
-Dual protocol is implemented on top of [HevEmitter](https://github.com/plediii/HevEmitter).  HevEmitter is a hierarchical event emitter.  HevEmitter provides the functionality to send messages to hierarchically organized functions.  
+Dual-protocol extends my hierarchical event emitter,
+[HevEmitter](https://github.com/plediii/HevEmitter), by constraining
+the format of the events.
 
-Dual protocol extends HevEmitter by constraining the format of the messages sent to the HevEmitter listeners.
+## Constructing dual-protocol domains
 
-## Constructing dual protocol domains
+Any process holding a dual-protocol domain instance (including all
+hosts mounted on the domain instance) may send messages to any host in
+the domain instance.
 
-Any process holding a dual protocol domain (including the mounted hosts) may send messages to any host in the domain without constraint on the destination.  
-
-The dual protocol module is the constructor for domains:
+The dual-protocol module is the constructor for domain instances:
 ```javascript
 var dualproto = require('dual-protocol');
 
@@ -19,13 +21,39 @@ var domain = dualproto();
 
 ## Messages
 
-Dual protocol messages (named `ctxt` here) are similar in structure to HTTP requests.  Dual protocol messages consist in:
+Dual protocol messages (named `ctxt` here) are similar in structure to
+HTTP requests.  Dual protocol messages consist in:
 * A destination address: `ctxt.to`.  
 * An optional source address: `ctxt.from`.
 * An optional body: `ctxt.body`.  
-* And an optional hash of meta data: `ctxt.options`.
+* And an optional hash of meta data (like headers): `ctxt.options`.
 
-The destination and source should be an array of strings.  The message `body` and `options` should be a JSON serializable objects. The `body` and `options` are not required to be JSON serializable, however failing to adhere to this constraint will prevent messages from crossing some domain boundaries.
+The destination address names a HevEmitter event, which is an array of
+strings.  Messages are emitted on the dual-protocol domain, and
+received by a set of listening host functions.  
+
+The content of the messages is expressed by the optional body.
+Messages without bodies may be interpreted like HTTP GET or HEAD
+requests; similarly messages with bodies may be interprested like HTTP
+POST or PUT.  In order for the message to cross interprocess
+boundaries, the body must be JSON serializable.
+
+The optional source address provides information orthogonal to the
+body information, which the destination host may use to create a
+layered system in the RESTful sense.  Practically, hosts may use the
+source address to affect the message processing in a manner distinct
+from the expected function of the body (e.g., source address
+filtering, responses, proxy).
+
+Finally, the optional hash of meta data is similar to headers in HTTP.
+`ctxt.options` express information about the message orthogonal to
+both the source and body, providing information which aid in
+processing, but do not affect the function of the host (e.g.,
+authorization tokens, body schema, classification).
+
+Dual-protocol also extends the message objects with customizable
+convenience functions (TODO: enumerate).
+
 
 ## Mounting a host
 
