@@ -17,7 +17,7 @@ in concept to HTTP requests.  Dual protocol messages consist in:
 
 The destination address names a resource controlled by a host function
 mounted on the dual-protocol domain.  Under the hood, the destination
-address is a HevEmitter event, which are lists of strings.  
+address is a HevEmitter event, which is lists of strings.  
 
 The entity associated with the message is expressed by the optional
 body.  Messages without bodies can be interpreted like HTTP GET or
@@ -29,10 +29,10 @@ be JSON serializable.
 The optional source address provides information orthogonal to the
 body information, which the destination host canx use to create a
 [layered system](http://en.wikipedia.org/wiki/Representational_state_transfer#Layered_system)
- in the RESTful sense.  Practically, hosts may use the
-source address to affect message processing in a manner distinct
-from the expected function of the body (e.g., source address
-filtering, responses, proxy).
+in the RESTful sense.  The source address should also be a HevEmitter
+event.  Practically, hosts may use the source address to affect
+message processing in a manner distinct from the expected function of
+the body (e.g., source address filtering, responses, proxy).
 
 Finally, the optional hash of meta data is similar to headers in HTTP.
 `ctxt.options` express information about the message orthogonal to
@@ -53,7 +53,6 @@ reference to domain on which the message was sent on each request.
 The dual-protocol module is the constructor for domain instances:
 ```javascript
 var dualproto = require('dual-protocol');
-
 var domain = dualproto();
 ```
 
@@ -67,31 +66,96 @@ messages, the `dual-protocol` object will automatically parse
 parameters declared in the destination address (prefixed with `:`),
 and provide these in the `ctxt.params` object.
 
-The `dual-protocol` object will also attach the domain on which
-message is sent at `ctxt.domain`.  The host may use this domain to
-transmit additional messages or responses.
-
-For example the following host will print all messages it received,
-and forward a copy of the message to a host in the "database" hierarchy:
+For example the following host will record all messages
+it receives in a javascript list.
 
 ```javascript
+var db = {};
+domain.mount(['database', ':collection'], function (ctxt) {
+    var collection = ctxt.params.collection;
+    if (!db.hasOwnProperty(collection)) {
+      db[collection] = [];
+    }
+    db[collection].push(ctxt.body);
+});
+```
+We may send messages to this host using the `domain.send` method described below.
+
+## Sending messages with `domain.send`
+
+Messages are sent to hosts mounted on the domain via  `domain.send(to, from, body, options)`.
+
+```javascript
+domain.send(['database', 'message'], [], 'Hello Alice!');
+```
+
+Here we are using an empty source address indicating that we do not
+want a receipt from the database.  However, the database is not
+sending a response so doesn't matter just yet.  We can improve the
+safety of the system by using the `ctxt.reply` and `domain.request`
+methods described below.
+
+In addition to the usual message properties, dual-protocol also
+attaches a reference to the domain the host received the message from
+at `ctxt.domain`.  The host may use this method to send additional
+messages.  For example, the following host outputs information about
+the message, and forwards a copy of the message to the database.
+
+The `dual-protocol` object will also attach the domain on which the
+message is sent at `ctxt.domain`.  For example the following host will
+print all messages it received, and forwards a copy of the message to
+the database:
+```javascript
 domain.mount(['message', ':name'], function (ctxt) {
-    console.log(ctxt.from.join('/') + ' sent a message to ' + ctxt.params.name + ' at the dual protocol address ' + ctxt.from.join('/') + '. The message is : ', ctxt.body);
-    ctxt.domain.send(['database', 'message', ':name'], [], ctxt.body);
+    console.log(ctxt.from.join('/') + ' sent a message to ' + ctxt.params.name);
+    console.log('The message was received by ' + ctxt.from.join('/'));
+    console.log('The message is: ', ctxt.body);
+    ctxt.domain.send(['database', 'message'], [], ctxt.body);
 });
 ```
 
-## Sending messages
-
-Messages can be sent to hosts via the method `domain.send(to, from, body, options)`.
+Then, a message such as:
 ```javascript
-domain.send(['journal', 'bioinformatics'], ['scientist'], 'The Human Genome');
+domain.send(['message', 'alice'], ['user', 'bob'], 'Hello Alice!');
+```
+would result in:
+```shell
+user/bob sent a message to alice
+The message was received by message/alice
+The message is: Hello Alice!
 ```
 
-Sending the above message results in the output:
-```shell
-scientist published to the journal of bioinformatics at the dual protocol address journal/bioinformatics.  The message is :  The Human Genome
+Since we have not yet mounted a host in the 'database' hierarchy, 
+`ctxt.domain.send(['database', 'message', ':name'], [], ctxt.body);` would normally cause dual-protocol
+to emit a message to the source address with a `ctxt.options.statusCode` set to 
+the
+However, since the source address is empty, `[]`, the message would be lost. 
+We can handle this in a safer manner by 
+with the `request` status function.
+
+## Replying to messages with `ctxt.reply`
+
+It's common for a host to send a response back to the source address.
+For instance, the database may wish to reply with a message indicating
+that it has safely stored the data. Dual-protcol attaches the
+convenience function `ctxt.reply(body, options)`, to the incoming messages.
+ 
+```javascript
+var safedb = { message: [] };
+domain.mount(['safedatabase', ':collection'], function (ctxt) {
+    var collection = ctxt.params.collection;
+    if (!safedb.hasOwnProperty(collection)) {
+       ctxt.reply('No such collection.', { statusCode: '404' });
+    }
+    safedb[collection].push(ctxt.body);
+    ctxt.reply('OK');
+});
 ```
+By default, reply will set `ctxt.options.statusCode` to the
+[HTTP status code](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
+`200`.  If the collection does not exist however, we are replying with a
+`statusCode` of `404`.
+
 
 ## Replying to and forwarding messages
 
