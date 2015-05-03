@@ -61,13 +61,14 @@ var domain = dualproto();
 A dual protocol *host* is a function which accepts dual protocol
 messages.  Hosts are mounted on the domain using the `mount` method.
 
-In addition to the attributes associated with dual protocol
-messages, the `dual-protocol` object will automatically parse
-parameters declared in the destination address (prefixed with `:`),
-and provide these in the `ctxt.params` object.
+In addition to the attributes associated with dual protocol messages,
+the `dual-protocol` object will automatically parse parameters
+declared in the destination address (strings prefixed with `:`), and
+provide these in the `ctxt.params` object.  Strings prefixed with `::`
+will match the *rest* of the address.
 
 For example the following host will record all messages
-it receives in a javascript list.
+it receives in a list.
 
 ```javascript
 var db = {};
@@ -79,8 +80,6 @@ domain.mount(['database', ':collection'], function (ctxt) {
     db[collection].push(ctxt.body);
 });
 ```
-We may send messages to this host using the `domain.send` method described below.
-
 ## Sending messages with `domain.send`
 
 Messages are sent to hosts mounted on the domain via  `domain.send(to, from, body, options)`.
@@ -89,17 +88,16 @@ Messages are sent to hosts mounted on the domain via  `domain.send(to, from, bod
 domain.send(['database', 'message'], [], 'Hello Alice!');
 ```
 
-Here we are using an empty source address indicating that we do not
-want a receipt from the database.  However, the database is not
-sending a response so doesn't matter just yet.  We can improve the
-safety of the system by using the `ctxt.reply` and `domain.request`
-methods described below.
+Here we are using an empty source address since `'database'` is not
+attempting to make a reply, nor do we have a mounted host ready to
+receive a reply.
 
 In addition to the usual message properties, dual-protocol also
 attaches a reference to the domain the host received the message from
-at `ctxt.domain`.  The host may use this method to send additional
-messages.  For example, the following host outputs information about
-the message, and forwards a copy of the message to the database.
+at `ctxt.domain`.  The host may could the domain to send additional
+messages and/or replies.  For example, the following host outputs
+information about the message to the console, and forwards a copy of
+the message to the database.
 
 The `dual-protocol` object will also attach the domain on which the
 message is sent at `ctxt.domain`.  For example the following host will
@@ -125,86 +123,43 @@ The message was received by message/alice
 The message is: Hello Alice!
 ```
 
-Since we have not yet mounted a host in the 'database' hierarchy, 
-`ctxt.domain.send(['database', 'message', ':name'], [], ctxt.body);` would normally cause dual-protocol
-to emit a message to the source address with a `ctxt.options.statusCode` set to 
-the
-However, since the source address is empty, `[]`, the message would be lost. 
-We can handle this in a safer manner by 
-with the `request` status function.
+## Creating temporary hosts with `domain.waitFor`
 
-## Replying to messages with `ctxt.reply`
+In several cases, it is convenient to create a host to wait for a
+single message, such as a *ready* event, or a response, without
+leaving a permanently listening host at that address.  Dual-protocol
+provides the `domain.waitFor(event, options)` method for this purpose.  
 
-It's common for a host to send a response back to the source address.
-For instance, the database may wish to reply with a message indicating
-that it has safely stored the data. Dual-protcol attaches the
-convenience function `ctxt.reply(body, options)`, to the incoming messages.
- 
+`domain.waitFor` returns a promise that will resolve when the event
+has been received.  For instance, we create a listener for `'ready'`:
 ```javascript
-var safedb = { message: [] };
-domain.mount(['safedatabase', ':collection'], function (ctxt) {
-    var collection = ctxt.params.collection;
-    if (!safedb.hasOwnProperty(collection)) {
-       ctxt.reply('No such collection.', { statusCode: '404' });
-    }
-    safedb[collection].push(ctxt.body);
-    ctxt.reply('OK');
-});
-```
-By default, reply will set `ctxt.options.statusCode` to the
-[HTTP status code](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
-`200`.  If the collection does not exist however, we are replying with a
-`statusCode` of `404`.
-
-
-## Replying to and forwarding messages
-
-At the protocol level, hosts may reply to one another by sending messages directly to the source address.  Hosts are not required to emit a reply.  Constraints on the reply may be enforced at the API level.  
-
-For instance we may mount a host that replies to source address like this:
-```javascript
-domain.mount(['laboratory', 'supercomputer'], function (ctxt) {
-    ctxt.send(['journal', 'bioinformatics'], ctxt.to, 'Super computed ' + ctxt.body);
+domain.waitFor(['ready'], { timeout: 60000 })
+.then(function (ctxt) {
+  console.log('We are ready!');
 });
 ```
 
-The source address at the protocol layer may be forged.  This allows the implementation of proxy hosts.  For instance the following host mounted at scientist simply forwards his messages to the super computer:
+Then we can trigger this host once, and only once, by using
+`domain.send`.  If the `timeout` option is provided, the host will be
+cancelled `timeout` milliseconds if provided.
+
+In order to wait for a response to a specific message, we need to
+create a unique host name that is only known only by the request
+originator.  Dual-protocol includes a unique id generator at
+`domain.uid`.  
+
 ```javascript
-domain.mount(['scientist'], function (ctxt) {
-    domain.send(['laboratory', 'supercomputer'], ctxt.from, ctxt.body + ' by the scientist.');
+domain.uid().then(function (mailbox) {
+  domain.waitFor([mailbox])
+  .then(function (ctxt) {
+    console.log('My temporary mailbox just received: ', ctxt.body);
+  });
+
+  domain.send([mailbox], [], 'mail!');
 });
-```
 
-Messages sent to the scientist,
-```javascript
-domain.send(['scientist'], ['gradstudent'], 'sequence alignment');
-```
-would result in the following published output
-```shell
-  scientist published to the journal of bioinformatics at the dual protocol address journal/bioinformatics.  The message is :  Super computed sequence alignment by the scientist.
-```
+## Extending dual-protocol
 
-## Mounting temporary addresses
+Dual-protocol may customized with further constraints and additional functions.
 
-The `'gradstudent'` in the above example could not receive messages, since there is no host mounted at `['gradstudent']`.  However, the gradstudent can still communicate with the super computer directly, by using the `waitFor` method.  Unforgeable addresses can be produced using the `uid` method.
-
-```javascript
-domain.uid()
-.then(function (mailbox) {
-   domain.waitFor([mailbox])
-   .then(function (ctxt) {
-     console.log('Received in the mailbox: ', ctxt.body);
-   });
-   domain.send(['laboratory', 'supercomputer'], [mailbox], 'the fruit fly genome');
-});
-```
-
-The above would result in the output:
-```shell
-  Received in the mailbox: Super computed the fruit fly genome
-```
-
-
-
-
-
+TODO
