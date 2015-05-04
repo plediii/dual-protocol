@@ -130,7 +130,7 @@ provides the `domain.waitFor(event, options)` method for this purpose.
 `domain.waitFor` returns a promise that will resolve when the event
 has been received.  For instance, we create a listener for `'ready'`:
 ```javascript
-domain.waitFor(['ready'], { timeout: 60000 })
+domain.waitFor(['ready'], { timeout: 60 })
 .then(function (ctxt) {
   console.log('We are ready!');
 });
@@ -138,7 +138,7 @@ domain.waitFor(['ready'], { timeout: 60000 })
 
 Then we can trigger this host once, and only once, by using
 `domain.send`.  If the `timeout` option is provided, the host will be
-cancelled `timeout` milliseconds if provided.
+cancelled `timeout` seconds if provided.
 
 In order to wait for a response to a specific message, we need to
 create a unique host name that is only known only by the request
