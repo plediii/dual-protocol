@@ -1,10 +1,10 @@
 # Dual-protocol
 
-This is the protocol layer for dual-api.
+This is the protocol layer for [dualapi](https://github.com/plediii/dualapi).
 
 Dual-protocol extends my hierarchical event emitter,
 [HevEmitter](https://github.com/plediii/HevEmitter), by constraining the schema of 
-the event bodies to create an *HTTP-like* layered system.
+the event bodies to create an *HTTP-like* layered system.  
 
 ## Messages
 
@@ -39,9 +39,6 @@ Finally, the optional hash of meta data is similar to headers in HTTP.
 both the source and body, providing information which aid in
 processing, but do not affect the function of the host (e.g.,
 authorization tokens, body schema, classification).
-
-Dual-protocol also extends the message objects with customizable
-convenience functions (TODO: enumerate).
 
 ## Constructing dual-protocol domains
 
@@ -157,9 +154,26 @@ domain.uid().then(function (mailbox) {
 
   domain.send([mailbox], [], 'mail!');
 });
+```
 
 ## Extending dual-protocol
 
-Dual-protocol may customized with further constraints and additional functions.
+Dual-protocol strives to be simple, without constraining the behavior
+of the hosts or senders.  Additional constraints, convenience
+functions and automated behaviors can be added by customizing
+dual-protocol; creating an API:
 
-TODO
+```javascript
+var dualproto = require('dual-protocol');
+var api = dualproto.use(function (dualproto) {
+  dualproto.Message.prototype.reply = function (body) {
+     this.domain.send(this.from, [], body);
+  };
+});
+var domain = api();
+domain.mount(['responder'], function (ctxt) {
+  ctxt.reply('Hello');
+});
+
+```
+
