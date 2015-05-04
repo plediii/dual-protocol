@@ -1,17 +1,17 @@
 /*jslint node: true */
 "use strict";
 
-var dualapi = require('../index');
+var dualproto = require('../index');
 var _ = require('lodash');
 var assert = require('assert');
 
-describe('dualapi', function () {
+describe('dualproto', function () {
     
     describe('waitfor', function () {
 
         var dual;
         beforeEach(function () {
-            dual = dualapi();
+            dual = dualproto();
         });
 
         it('should resolve when target route emitted', function (done) {

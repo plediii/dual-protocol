@@ -2,21 +2,25 @@
 /* global -Promise */
 "use strict";
 
-var dualapi = require('../index');
+var dualproto = require('../index');
 var _ = require('lodash');
 var assert = require('assert');
 var Promise = require('bluebird');
 
-describe('dualapi', function () {
+describe('dualproto', function () {
 
     describe('error', function () {
 
         var d;
         beforeEach(function (done) {
-            d = dualapi();
+            d = dualproto();
             done();
         });
 
+        // each of the follwing is a host that that throws an error
+        // with the same arbitrary message ("battery").  We're going
+        // to check that when these hosts are triggered, dual-protocol
+        // sends an error event being thrown on the domain.
         _.each({
             'synch host throws': function (ctxt) {
                 throw 'battery';
@@ -76,7 +80,6 @@ describe('dualapi', function () {
                     d.mount(['thrower'], thrower);
                     d.send(['thrower']);
                 });
-
 
                 it('should be triggered with the exception as body.message', function (done) {
                     d.mount(['error'], function (ctxt) {

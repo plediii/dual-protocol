@@ -1,15 +1,15 @@
 /*jslint node: true */
 "use strict";
 
-var dualapi = require('../index');
+var dualproto = require('../index');
 var _ = require('lodash');
 var assert = require('assert');
 
-describe('dualapi', function () {
+describe('dualproto', function () {
 
     describe('single star wild cards', function () {
 
-        var dual = dualapi();
+        var dual = dualproto();
         
         it('should be host mount points', function (done) {
             dual.mount(['wild', '*'], function () {
@@ -20,7 +20,7 @@ describe('dualapi', function () {
 
         it('should not receive from longer destinations', function (done) {
             dual.mount(['wild1', '*'], function () {
-                assert(false);
+                done('first level should not have been triggered');
             });
             dual.mount(['wild1', '*', '*'], function () {
                 done();
