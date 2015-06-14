@@ -152,7 +152,7 @@ _.extend(Domain.prototype, {
             };
             domain.once(route, receiver);
             if (options.timeout > 0) {
-                var timer = setTimeout(function () {
+                timer = setTimeout(function () {
                     domain.removeListener(route, receiver);
                     reject(false);
                 }, 1000 * options.timeout);
