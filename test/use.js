@@ -127,15 +127,6 @@ describe('dualproto', function () {
             domain.send(['hey']);
         });
 
-        it('should allow replacing the constructor', function (done) {
-            var api = dualproto.use(function (Domain) {
-                return function () {
-                    done();
-                };
-            });
-            api(); 
-        });
-
         // test that waitfor uses the extended message type
 
     });
