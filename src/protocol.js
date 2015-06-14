@@ -8,33 +8,7 @@ var inherits = require('inherits');
 var Promise = require('bluebird');
 var uid = require('./uid');
 
-var Message = function (options) {
-    var _this = this;
-    _.extend(_this, _.defaults(_.pick(options, 'domain', 'to', 'from', 'body', 'options')
-                              , {
-                                  to: []
-                                  , from: []
-                                  , options: {}
-                              }));
-};
-
-_.extend(Message.prototype, {
-    toJSON: function () {
-        return _.pick(this, 'to', 'from', 'body', 'options');
-    }
-    , parent: function (n) {
-        if (n !== 0) {
-            n = n || 1;
-        }
-        var _this = this;
-        if (n > _this.to.length) {
-            throw new Error('Invalid parent slice ' + n + ' for point ' + _this.to.join('/'));
-        }
-        else {
-            return _this.to.slice(0, _this.to.length - n);
-        }
-    }
-});
+var Message = require('./message');
 
 var mountParametrized = function (domain, point, host) {
     var params = [];
@@ -86,8 +60,7 @@ var Domain = function (options) {
 inherits(Domain, HevEmitter);
 
 _.extend(Domain.prototype, {
-    Message: Message
-    , mount: function (point, host) {
+    mount: function (point, host) {
         var _this = this;
 
         if (arguments.length < 2)
@@ -188,6 +161,7 @@ var makeConstructor = function (Domain) {
     return constructor;
 };
 
+Domain.prototype.Message = Message;
 module.exports = makeConstructor(Domain);
 
 

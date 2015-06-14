@@ -3,10 +3,6 @@
 "use strict";
 
 var _ = require('lodash');
-var HevEmitter = require('hevemitter').EventEmitter;
-var inherits = require('util').inherits;
-var Promise = require('bluebird');
-var uid = require('./uid');
 
 var Message = module.exports = function (options) {
     var _this = this;
@@ -19,22 +15,7 @@ var Message = module.exports = function (options) {
 };
 
 _.extend(Message.prototype, {
-    send: function (to, from, body, options) {
-        return this.domain.send(to, from, body, options);
-    }
-    , error: function (message) {
-        var _this = this;
-        _this.send(['error'].concat(_this.to), [], {
-            message: message
-            , ctxt: {
-                to: _this.to
-                , from: _this.from
-                , body: _this.body
-                , options: _this.options
-            }
-        });
-    }
-    , toJSON: function () {
+    toJSON: function () {
         return _.pick(this, 'to', 'from', 'body', 'options');
     }
     , parent: function (n) {
