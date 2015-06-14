@@ -34,6 +34,13 @@ var makeConstructor = function (Domain) {
 };
 
 Domain.prototype.Message = Message;
-module.exports = makeConstructor(Domain);
+
+require('./mount')(Domain);
+require('./unmount')(Domain);
+require('./send')(Domain);
+require('./uid')(Domain);
+require('./waitFor')(Domain);
+
+module.exports = makeConstructor(Domain)
 
 

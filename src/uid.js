@@ -56,14 +56,15 @@ var regen = function () {
 };
 
 
-module.exports = function () {
-    return key.then(function (k) {
-        previousUid = digest(previousUid + k + (counter++) + Date.now());
-        if (counter % 50 === 0) {
-            regen();
-        }
-        return previousUid.slice(0, 32);
-    });
+module.exports = function (Domain) {
+    Domain.prototype.uid = function () {
+        return key.then(function (k) {
+            previousUid = digest(previousUid + k + (counter++) + Date.now());
+            if (counter % 50 === 0) {
+                regen();
+            }
+            return previousUid.slice(0, 32);
+        });
+    };
+    Domain.prototype.uid.regen = regen;
 };
-
-module.exports.regen = regen;
