@@ -39,12 +39,12 @@ describe('dualproto', function () {
 
         it('should return true when an event a host is matched', function () {
             d.mount(['food'], function () {});
-            assert(dual.send(['food']));
+            assert(d.send(['food']));
         });
 
         it('should return false when an event is *not* matched', function () {
             d.mount(['food'], function () {});
-            assert(!dual.send(['wad']));
+            assert(!d.send(['wad']));
         });
 
     });
@@ -95,7 +95,7 @@ describe('dualproto', function () {
         });
 
         it('should be called with body when one is provided', function (done) {
-            d.mount(['hostD'], function (ctxt) {
+            d.mount(['hostD'], function (body, ctxt) {
                 assert.deepEqual(ctxt.body, {a: 1});
                 done();
             });
