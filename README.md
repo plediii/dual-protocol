@@ -69,7 +69,7 @@ it receives in a list.
 
 ```javascript
 var db = {};
-domain.mount(['database', ':collection'], function (ctxt) {
+domain.mount(['database', ':collection'], function (body, ctxt) {
     var collection = ctxt.params.collection;
     if (!db.hasOwnProperty(collection)) {
       db[collection] = [];
@@ -101,7 +101,7 @@ message is sent at `ctxt.domain`.  For example the following host will
 print all messages it received, and forwards a copy of the message to
 the database:
 ```javascript
-domain.mount(['message', ':name'], function (ctxt) {
+domain.mount(['message', ':name'], function (body, ctxt) {
     console.log(ctxt.from.join('/') + ' sent a message to ' + ctxt.params.name);
     console.log('The message was received by ' + ctxt.from.join('/'));
     console.log('The message is: ', ctxt.body);
