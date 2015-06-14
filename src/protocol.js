@@ -113,25 +113,22 @@ var mountParametrized = function (domain, point, host) {
             return name;
         }
     });
+    var f = host;
     if (params.length !== 0 
         || tailparams.length !== 0) {
-        var parseParams = function (msg) {
-            msg.params = {};
+        f = function (body, ctxt) {
+            ctxt.params = {};
             _.each(params, function (param) {
-                msg.params[param[0]] = msg.to[param[1]];
+                ctxt.params[param[0]] = ctxt.to[param[1]];
             });
             _.each(tailparams, function (tailparam) {
-                msg.params[tailparam[0]] = msg.to.slice(tailparam[1]);
+                ctxt.params[tailparam[0]] = ctxt.to.slice(tailparam[1]);
             });
-        };
-        f = function (msg) {
-            parseParams(msg);
-            return host(msg);
+            return host(body, ctxt);
         };
         f.listener = host;
-        host = f;
     }
-    domain.on(point, host);
+    domain.on(point, f);
 };
 
 var Domain = function (options) {
