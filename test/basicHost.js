@@ -286,4 +286,28 @@ describe('dualproto', function () {
 
     });
 
+    describe('unmount', function () {
+
+        it('should unmount the named host', function () {
+            d.mount({
+                host: function () {}
+            });
+            assert(d.send(['host']));
+            d.unmount(['host']);
+            assert(!d.send(['host']));
+        });
+
+        it('should unmount the sub hosts', function () {
+            d.mount({
+                host: {
+                    okay: function () {}
+                }
+            });
+            assert(d.send(['host', 'okay']));
+            d.unmount(['host']);
+            assert(!d.send(['host', 'okay']));
+        });
+
+    });
+
 });
