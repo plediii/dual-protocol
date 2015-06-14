@@ -4,8 +4,6 @@
 
 var _ = require('lodash');
 var inherits = require('inherits');
-var Promise = require('bluebird');
-var uid = require('./uid');
 
 var Message = require('./message');
 var Domain = require('./domain');
