@@ -45,6 +45,13 @@ describe('dualproto', function () {
                 assert.deepEqual(ctxt.parent(), ['play', 'him']);
             });
 
+            it('should be trivial if parent(0)', function () {
+                var ctxt = new dualproto.Message({
+                    to: ['play', 'him', 'off']
+                });
+                assert.deepEqual(ctxt.parent(0), ['play', 'him', 'off']);
+            });
+
             it('should return the parent parent when given 2', function () {
                 var ctxt = new dualproto.Message({
                     to: ['play', 'him', 'off']

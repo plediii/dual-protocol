@@ -47,6 +47,16 @@ describe('dualproto', function () {
             assert(!d.send(['wad']));
         });
 
+        it('should silently ignore empty destinations', function () {
+            d.mount(['**'], function () {});
+            assert(!d.send([]));
+        });
+
+        it('should silently ignore null destinations', function () {
+            d.mount(['**'], function () {});
+            assert(!d.send(null));
+        });
+
     });
     
     describe('mounted host', function () {
@@ -154,6 +164,12 @@ describe('dualproto', function () {
             d.send(['host']);
         });
 
+        it('should warn about unmountable hosts', function () {
+            assert.throws(function () {
+                d.mount('you', 'pig');
+            }, /host/);
+        });
+
         it('should be possible to mount host trees directly', function (done) {
             d.mount({
                 go: function () {
@@ -163,6 +179,12 @@ describe('dualproto', function () {
             d.send(['go']);
         });
 
+        it('should be possible to mount root host as a string', function (done) {
+            d.mount('go', function () {
+                    done();
+            });
+            d.send(['go']);
+        });
 
         it('should be possible to mount hosts in a tree structure below a static trunk', function (done) {
             d.mount(['cookie'], {
@@ -230,6 +252,19 @@ describe('dualproto', function () {
             assert.deepEqual(['dragon', 'drag-on'], called);
         });
 
+        it('should be possible to mount array of objects', function () {
+            var called = [];
+            d.mount(['yeah'], [
+                {
+                    valentine: function () {
+                        called.push('dragon');
+                    }
+                }
+            ]);;
+            d.send(['yeah', 'valentine']);
+            assert.deepEqual(['dragon'], called);
+        });
+
         it('should be possible to mount nested array', function () {
             var called = [];
             d.mount([], {
@@ -247,6 +282,30 @@ describe('dualproto', function () {
 
             d.send(['juicy', 'apple']);
             assert.deepEqual(['no', 'acceptable'], called);
+        });
+
+    });
+
+    describe('unmount', function () {
+
+        it('should unmount the named host', function () {
+            d.mount({
+                host: function () {}
+            });
+            assert(d.send(['host']));
+            d.unmount(['host']);
+            assert(!d.send(['host']));
+        });
+
+        it('should unmount the sub hosts', function () {
+            d.mount({
+                host: {
+                    okay: function () {}
+                }
+            });
+            assert(d.send(['host', 'okay']));
+            d.unmount(['host']);
+            assert(!d.send(['host', 'okay']));
         });
 
     });
