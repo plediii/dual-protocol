@@ -136,102 +136,6 @@ _.extend(Domain.prototype, {
         }));
     }
     , uid: uid
-    , request: function (to, body, options) {
-        var _this = this;
-        return _this.get(to, body, options)
-        .then(function (ctxt) {
-            return [ctxt.body, ctxt.options, ctxt];
-        });
-    }
-    , get: function (to, body, options) {
-        var _this = this;
-        var domain = _this;
-        options = _.defaults({}, options, {
-            timeout: 120
-        });
-        return uid()
-            .then(function (requestid) {
-                return new Promise(function (resolve) {
-                    var from = [requestid + 'request'];
-                    var timer;
-                    var receiver;
-                    if (options.timeout > 0) {
-                        timer = setTimeout(function () {
-                            domain.removeListener(from, receiver);
-                            resolve(new Message({
-                                options: {
-                                    statusCode: '408'
-                                }
-                            }));
-                        }, 1000 * options.timeout);
-                    }
-                    receiver = function (ctxt) {
-                        if (timer) {
-                            clearTimeout(timer);
-                        }
-                        resolve(new Message(ctxt));
-                    };
-                    domain.once(from, receiver);
-                    return domain.send(to, from, body, options)
-                        .then(function (called) {
-                            if (!called) {
-                                return resolve(new Message({
-                                    options: {
-                                        statusCode: '503'
-                                    }
-                                }));
-                            }
-                        });
-                });
-            });
-    }
-    , open: function (mount, socket, firewall) {
-        var _this = this;
-        _this.mount(mount.concat('**'), function (ctxt) {
-            return ctxt.transfer(mount, socket);
-        });
-        var transferToDomain;
-        var openTransfer = function (ctxt) {
-            return _this.send(ctxt.to, mount.concat(ctxt.from), ctxt.body, ctxt.options);
-        };
-        if (firewall) {
-            transferToDomain = function (ctxt) {
-                var to = _.clone(ctxt.to);
-                var from = _.clone(ctxt.from);
-                firewall(ctxt, function (ok, options) {
-                    if (ok) {
-                        openTransfer(_.extend(ctxt, {
-                            to: to
-                            , from: from
-                            , options: options || {}
-                        }));
-                    }
-                });
-            };
-        }
-        else {
-            transferToDomain = openTransfer;
-        }
-        socket.on('dual', transferToDomain);
-
-        var onDisconnect = function () {
-            _this.unmount(mount.concat('**'));
-            socket.removeListener('dual', transferToDomain);
-            socket.removeListener('disconnect', onDisconnect);
-        };
-        socket.on('disconnect', onDisconnect);
-    }
-    , bridge: function (remote, routes, fromRoutes) {
-        var _this = this;
-        _.each(routes, function (route) {
-            _this.mount(route.concat('**'), function (ctxt) {
-                remote.send(ctxt.to, ctxt.from, ctxt.body, ctxt.options);
-            });
-        });
-        if (fromRoutes) {
-            remote.bridge(_this, fromRoutes);
-        }
-    }
     , waitFor: function (route, options) {
         var _this = this;
         var domain = _this;
@@ -269,30 +173,6 @@ _.extend(module.exports, {
             , Message: Message
         });
         return proto;
-    }
-    , synchOption: function (name, fetch) {
-        var cache = {};
-        return function (ctxt, next) {
-            var k = ctxt.params[name];
-            if (cache.hasOwnProperty(k)) {
-                ctxt.options[name] = cache[k];
-                next();
-            }
-            else {
-                return fetch(ctxt, function (err, val) {
-                    if (!err) {
-                        if (!cache.hasOwnProperty(k)) {
-                            cache[k] = val;
-                        }
-                        else {
-                            val = cache[k];
-                        }
-                        ctxt.options[name] = val;
-                    }
-                    next(err);
-                });
-            }
-        };
     }
 });
 
