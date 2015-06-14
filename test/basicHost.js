@@ -236,6 +236,19 @@ describe('dualproto', function () {
             assert.deepEqual(['dragon', 'drag-on'], called);
         });
 
+        it('should be possible to mount array of objects', function () {
+            var called = [];
+            d.mount(['yeah'], [
+                {
+                    valentine: function () {
+                        called.push('dragon');
+                    }
+                }
+            ]);;
+            d.send(['yeah', 'valentine']);
+            assert.deepEqual(['dragon'], called);
+        });
+
         it('should be possible to mount nested array', function () {
             var called = [];
             d.mount([], {
