@@ -319,12 +319,19 @@ _.extend(Domain.prototype, {
     }
 });
 
-module.exports = function () {
+var proto = module.exports = function () {
     return new Domain();
 };
 
 _.extend(module.exports, {
     Message: Message
+    , use: function (extender) {
+        extender({
+            Domain: Domain
+            , Message: Message
+        });
+        return proto;
+    }
     , synchOption: function (name, fetch) {
         var cache = {};
         return function (ctxt, next) {
