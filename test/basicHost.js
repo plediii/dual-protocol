@@ -154,6 +154,12 @@ describe('dualproto', function () {
             d.send(['host']);
         });
 
+        it('should warn about unmountable hosts', function () {
+            assert.throws(function () {
+                d.mount('you', 'pig');
+            }, /host/);
+        });
+
         it('should be possible to mount host trees directly', function (done) {
             d.mount({
                 go: function () {
