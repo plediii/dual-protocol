@@ -25,9 +25,10 @@ describe('dualproto', function () {
                 };
             });
             var domain = api(); 
-            domain.mount(['hey'], function (ctxt) {
+            domain.mount(['hey'], function (body, ctxt) {
                 ctxt.cutout();
             });
+            domain.send(['hey']);
         });
 
     });
