@@ -39,6 +39,18 @@ describe('dualproto', function () {
         });
 
 
+        it('should be able to trigger time limited waitfor', function (done) {
+            var start = Date.now();
+            d.waitFor(['lockersearch'], { timeout: 0.100 })
+            .then(function () {
+                done();
+            })
+            .catch(function (err) {
+                return done(err);
+            });
+            d.send(['lockersearch']);
+        });
+
         it('should reject after timeout interval when given timeout option (100)', function (done) {
             var start = Date.now();
             d.waitFor(['lockersearch'], { timeout: 0.100 })
