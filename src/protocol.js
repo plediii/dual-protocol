@@ -112,6 +112,9 @@ _.extend(Domain.prototype, {
                 _this.mount(point.concat(n), f);
             });
         }
+        else {
+            throw new Error('Unacceptable host type ' + typeof host + ' ' + host);
+        }
         return _this;
     }
     , unmount: function (point) {
