@@ -113,46 +113,6 @@ var mountParametrized = function (domain, point, host) {
             return name;
         }
     });
-    var h = Promise.method(host);
-    var f;
-    if (host.length > 1) {
-        f = function (msg, done) {
-            return h(msg, done)
-                .catch(function (err) {
-                    if (!msg.to || msg.to.length < 1
-                        || msg.to[0] !== 'error') {
-                        return domain.send(['error'].concat(msg.to), [], {
-                            message: err
-                            , context: { 
-                                to: msg.to
-                                , from: msg.from
-                                , body: msg.body
-                                , options: msg.options
-                            }
-                        });
-                    }
-                });
-        };
-    }
-    else {
-        f = function (msg) {
-            return h(msg)
-                .catch(function (err) {
-                    if (!msg.to || msg.to.length < 1
-                        || msg.to[0] !== 'error') {
-                        return domain.send(['error'].concat(msg.to), [], {
-                            message: err
-                            , context: { 
-                                to: msg.to
-                                , from: msg.from
-                                , body: msg.body
-                                , options: msg.options
-                            }
-                        });
-                    }
-                });
-        };
-    }
     if (params.length !== 0 
         || tailparams.length !== 0) {
         var parseParams = function (msg) {
@@ -164,22 +124,14 @@ var mountParametrized = function (domain, point, host) {
                 msg.params[tailparam[0]] = msg.to.slice(tailparam[1]);
             });
         };
-        var g = f;
-        if (g.length > 1) {
-            f = function (msg, next) {
-                parseParams(msg);
-                return g(msg, next);
-            };
-        }
-        else {
-            f = function (msg) {
-                parseParams(msg);
-                return g(msg);
-            };
-        }
+        f = function (msg) {
+            parseParams(msg);
+            return host(msg);
+        };
+        f.listener = host;
+        host = f;
     }
-    f.listener = host;
-    domain.on(point, f);
+    domain.on(point, host);
 };
 
 var Domain = function (options) {
@@ -240,19 +192,13 @@ _.extend(Domain.prototype, {
         if (!to || to.length < 1) {
             return;
         }
-        return _this.emit(to, new MessageContext(_.defaults({
+        return _this.emit(to, body, new MessageContext({
             domain: _this
             , to: to
             , from: from
             , body: body
             , options: options
-        })))
-            .then(function (called) {
-                if (!called && _this.options.verbose) {
-                    console.error('Dropped message: ', JSON.stringify(to));
-                }
-                return called;
-            });
+        }));
     }
     , uid: uid
     , request: function (to, body, options) {
