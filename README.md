@@ -1,4 +1,4 @@
-# Dual-protocol [![Build Status](http://jenkins.plediii.net:8080/buildStatus/icon?job=dual-protocol master&build=3)](http://jenkins.plediii.net:8080/job/dual-protocol%20master/3/)
+# Dual-protocol [![Build Status](http://jenkins.plediii.net:8080/buildStatus/icon?job=dual-protocol master)](http://jenkins.plediii.net:8080/job/dual-protocol%20master/)
 
 This is the protocol layer for [dualapi](https://github.com/plediii/dualapi).
 
