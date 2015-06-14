@@ -11,7 +11,7 @@ describe('dualproto', function () {
         
         it('should be able to mount host with parameters', function (done) {
             var dual = dualproto();
-            dual.mount(['cupcake', ':sprinkles'], function (ctxt) {
+            dual.mount(['cupcake', ':sprinkles'], function (body, ctxt) {
                 assert.equal(ctxt.params.sprinkles, 'chocolate');
                 done();
             });
@@ -21,7 +21,7 @@ describe('dualproto', function () {
 
         it('should be able to mount host points matching route tails', function (done) {
             var dual = dualproto();
-            dual.mount(['resolve', '::who'], function (ctxt) {
+            dual.mount(['resolve', '::who'], function (body, ctxt) {
                 assert.deepEqual(ctxt.params.who, ['frank', 'is', 'doing', 'the', 'dishes']);
                 done();
             });

@@ -8,7 +8,7 @@ var inherits = require('util').inherits;
 var Promise = require('bluebird');
 var uid = require('./uid');
 
-var MessageContext = function (options) {
+var Message = function (options) {
     var _this = this;
     _.extend(_this, _.defaults(_.pick(options, 'domain', 'to', 'from', 'body', 'options')
                               , {
@@ -18,7 +18,7 @@ var MessageContext = function (options) {
                               }));
 };
 
-_.extend(MessageContext.prototype, {
+_.extend(Message.prototype, {
     send: function (to, from, body, options) {
         return this.domain.send(to, from, body, options);
     }
@@ -113,72 +113,21 @@ var mountParametrized = function (domain, point, host) {
             return name;
         }
     });
-    var h = Promise.method(host);
-    var f;
-    if (host.length > 1) {
-        f = function (msg, done) {
-            return h(msg, done)
-                .catch(function (err) {
-                    if (!msg.to || msg.to.length < 1
-                        || msg.to[0] !== 'error') {
-                        return domain.send(['error'].concat(msg.to), [], {
-                            message: err
-                            , context: { 
-                                to: msg.to
-                                , from: msg.from
-                                , body: msg.body
-                                , options: msg.options
-                            }
-                        });
-                    }
-                });
-        };
-    }
-    else {
-        f = function (msg) {
-            return h(msg)
-                .catch(function (err) {
-                    if (!msg.to || msg.to.length < 1
-                        || msg.to[0] !== 'error') {
-                        return domain.send(['error'].concat(msg.to), [], {
-                            message: err
-                            , context: { 
-                                to: msg.to
-                                , from: msg.from
-                                , body: msg.body
-                                , options: msg.options
-                            }
-                        });
-                    }
-                });
-        };
-    }
+    var f = host;
     if (params.length !== 0 
         || tailparams.length !== 0) {
-        var parseParams = function (msg) {
-            msg.params = {};
+        f = function (body, ctxt) {
+            ctxt.params = {};
             _.each(params, function (param) {
-                msg.params[param[0]] = msg.to[param[1]];
+                ctxt.params[param[0]] = ctxt.to[param[1]];
             });
             _.each(tailparams, function (tailparam) {
-                msg.params[tailparam[0]] = msg.to.slice(tailparam[1]);
+                ctxt.params[tailparam[0]] = ctxt.to.slice(tailparam[1]);
             });
+            return host(body, ctxt);
         };
-        var g = f;
-        if (g.length > 1) {
-            f = function (msg, next) {
-                parseParams(msg);
-                return g(msg, next);
-            };
-        }
-        else {
-            f = function (msg) {
-                parseParams(msg);
-                return g(msg);
-            };
-        }
+        f.listener = host;
     }
-    f.listener = host;
     domain.on(point, f);
 };
 
@@ -240,19 +189,13 @@ _.extend(Domain.prototype, {
         if (!to || to.length < 1) {
             return;
         }
-        return _this.emit(to, new MessageContext(_.defaults({
+        return _this.emit(to, body, new Message({
             domain: _this
             , to: to
             , from: from
             , body: body
             , options: options
-        })))
-            .then(function (called) {
-                if (!called && _this.options.verbose) {
-                    console.error('Dropped message: ', JSON.stringify(to));
-                }
-                return called;
-            });
+        }));
     }
     , uid: uid
     , request: function (to, body, options) {
@@ -277,7 +220,7 @@ _.extend(Domain.prototype, {
                     if (options.timeout > 0) {
                         timer = setTimeout(function () {
                             domain.removeListener(from, receiver);
-                            resolve(new MessageContext({
+                            resolve(new Message({
                                 options: {
                                     statusCode: '408'
                                 }
@@ -288,13 +231,13 @@ _.extend(Domain.prototype, {
                         if (timer) {
                             clearTimeout(timer);
                         }
-                        resolve(new MessageContext(ctxt));
+                        resolve(new Message(ctxt));
                     };
                     domain.once(from, receiver);
                     return domain.send(to, from, body, options)
                         .then(function (called) {
                             if (!called) {
-                                return resolve(new MessageContext({
+                                return resolve(new Message({
                                     options: {
                                         statusCode: '503'
                                     }
@@ -359,11 +302,11 @@ _.extend(Domain.prototype, {
         });
         return new Promise(function (resolve, reject) {
             var timer;
-            var receiver = function (ctxt) {
+            var receiver = function (body, ctxt) {
                 if (timer) {
                     clearTimeout(timer);
                 }
-                resolve(new MessageContext(ctxt));
+                resolve(new Message(ctxt));
             };
             domain.once(route, receiver);
             if (options.timeout > 0) {
@@ -376,12 +319,19 @@ _.extend(Domain.prototype, {
     }
 });
 
-module.exports = function () {
+var proto = module.exports = function () {
     return new Domain();
 };
 
 _.extend(module.exports, {
-    MessageContext: MessageContext
+    Message: Message
+    , use: function (extender) {
+        extender({
+            Domain: Domain
+            , Message: Message
+        });
+        return proto;
+    }
     , synchOption: function (name, fetch) {
         var cache = {};
         return function (ctxt, next) {

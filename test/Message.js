@@ -2,11 +2,10 @@
 /* global -Promise */
 "use strict";
 
-var dualproto = require('../index');
 var _ = require('lodash');
 var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var Promise = require('bluebird');
+
+var dualproto = require('../index');
 
 describe('dualproto', function () {
     
