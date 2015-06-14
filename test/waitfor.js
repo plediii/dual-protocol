@@ -80,7 +80,7 @@ describe('dualproto', function () {
                 assert.deepEqual(ctxt.from, ['owner']);
                 assert.equal(ctxt.body.recreational, 'vehicle');
                 assert.equal(ctxt.options.yo, 'appointment');
-                assert(_.isFunction(ctxt.get));
+                assert(ctxt instanceof dualproto.Message);
                 done();
             })
             .catch(function (err) {
