@@ -58,6 +58,20 @@ describe('dualproto', function () {
         });
 
     });
+
+    describe('Message.send', function () {
+        it('should be a convenience function mounted on Message', function (done) {
+            d.mount({
+                big: function (body, ctxt) {
+                    assert(ctxt.send(['fans']));
+                }
+                , fans: function () {
+                    done();
+                }
+            })
+            assert(d.send(['fans']));
+        });
+    });
     
     describe('mounted host', function () {
 
