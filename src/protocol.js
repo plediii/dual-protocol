@@ -302,7 +302,7 @@ _.extend(Domain.prototype, {
         });
         return new Promise(function (resolve, reject) {
             var timer;
-            var receiver = function (ctxt) {
+            var receiver = function (body, ctxt) {
                 if (timer) {
                     clearTimeout(timer);
                 }
