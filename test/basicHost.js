@@ -6,28 +6,30 @@ var _ = require('lodash');
 var assert = require('assert');
 
 describe('dualproto', function () {
+    
+    var d;
+    beforeEach(function () {
+        d = dualproto();
+    });
 
     describe('mount', function () {
 
-        it('should return the domain', function (done) {
-            var domain = dualproto();
-            var x = domain
-                .mount(['big'], function () {});
-            assert.strictEqual(x, domain);
+        it('should return the domain', function () {
+            var x = d.mount(['big'], function () {});
+            assert.strictEqual(x, d);
         });
 
-        it('should be *NOT* be able to mount undefined', function (done) {
+        it('should be *NOT* be able to mount undefined', function () {
             // this is most likely an error on the user's part
-            var domain = dualproto();
             assert.throws(function () {
-                dual.mount([void 0], function () {});
+                d.mount([void 0], function () {});
             }, /undefined/);
         });
 
         it('should throw exception on empty mount destination', function () {
-            var domain = dualproto();
+            var d = dualproto();
             assert.throws(function () {
-                dual.mount([], function () {});
+                d.mount([], function () {});
             }, /empty/);
         });
 
@@ -35,172 +37,167 @@ describe('dualproto', function () {
 
     describe('send', function () {
 
-        it('should return promise value true when an event is matched', function (done) {
-            var dual = dualproto();
-            dual.mount(['food'], function () {});
-            dual.send(['food'])
-            .then(function (called) {
-                assert(called);
-                done();
-            });
+        it('should return true when an event a host is matched', function () {
+            d.mount(['food'], function () {});
+            assert(dual.send(['food']));
         });
 
-        it('should return promise value false when an event is matched', function (done) {
-            var dual = dualproto();
-            dual.mount(['food'], function () {});
-            dual.send(['wad'])
-            .then(function (called) {
-                assert(!called);
-                done();
-            });
+        it('should return false when an event is *not* matched', function () {
+            d.mount(['food'], function () {});
+            assert(!dual.send(['wad']));
         });
 
     });
     
     describe('mounted host', function () {
 
-        var dual = dualproto();
-        
         it('should be triggered on target message', function (done) {
-            dual.mount(['host'], function () {
+            d.mount(['host'], function () {
                 done();
             });
-            dual.send(['host']);
+            d.send(['host']);
         });
 
         it('should be removable via removeListener', function (done) {
             var removable = function () {
                 done('should have been removed');
             };
-            dual.mount(['guiness'], removable);
-            dual.mount(['guiness'], function () {
+            d.mount(['guiness'], removable);
+            d.mount(['guiness'], function () {
                 done();
             });
-            dual.removeListener(['guiness'], removable);
-            dual.send(['guiness']);
+            d.removeListener(['guiness'], removable);
+            d.send(['guiness']);
         });
 
         it('should be called with ctxt.to', function (done) {
-            dual.mount(['hostA'], function (ctxt) {
+            d.mount(['hostA'], function (body, ctxt) {
                 assert.deepEqual(ctxt.to, ['hostA']);
                 done();
             });
-            dual.send(['hostA']);
+            d.send(['hostA']);
         });
 
         it('should be called with ctxt.from', function (done) {
-            dual.mount(['hostB'], function (ctxt) {
+            d.mount(['hostB'], function (body, ctxt) {
                 assert.deepEqual(ctxt.from, ['sourceA']);
                 done();
             });
-            dual.send(['hostB'], ['sourceA']);
+            d.send(['hostB'], ['sourceA']);
         });
 
         it('should be called with undefined body when no body is provided', function (done) {
-            dual.mount(['hostC'], function (ctxt) {
-                assert(_.isUndefined(ctxt.body));
+            d.mount(['hostC'], function (body, ctxt) {
+                assert(_.isUndefined(body));
                 done();
             });
-            dual.send(['hostC'], ['sourceB']);
+            d.send(['hostC'], ['sourceB']);
         });
 
         it('should be called with body when one is provided', function (done) {
-            dual.mount(['hostD'], function (ctxt) {
+            d.mount(['hostD'], function (ctxt) {
                 assert.deepEqual(ctxt.body, {a: 1});
                 done();
             });
-            dual.send(['hostD'], [], {a: 1});
+            d.send(['hostD'], [], {a: 1});
         });
 
+        it('should be called same body on ctxt and arg', function (done) {
+            d.mount(['hostD'], function (body, ctxt) {
+                assert.equal(body, ctxt.body);
+                done();
+            });
+            d.send(['hostD'], [], {a: 1});
+        });
+
+
         it('should be called with options even when not provided', function (done) {
-            dual.mount(['hostD'], function (ctxt) {
+            d.mount(['hostD'], function (body, ctxt) {
                 assert(_.isObject(ctxt.options));
                 done();
             });
-            dual.send(['hostD'], [], {a: 1});
+            d.send(['hostD'], [], {a: 1});
         });
 
         it('should be called with provided options', function (done) {
-            dual.mount(['hostD'], function (ctxt) {
-                assert.deepEqual(ctxt.options, {a: 1});
+            d.mount(['hostD'], function (body, ctxt) {
+                assert.deepEqual(ctxt.options, {a: 2});
                 done();
             });
-            dual.send(['hostD'], [], {a: 1}, {a: 2});
+            d.send(['hostD'], [], {a: 1}, {a: 2});
         });
 
         it('should NOT be triggered on target message for other hosts', function (done) {
             var received = 0;
-            dual.mount(['hostE'], function () {
+            d.mount(['hostE'], function () {
                 received++;
             });
-            dual.mount(['host1'], function () {
+            d.mount(['host1'], function () {
                 assert.equal(received, 0);
                 received++;
                 done();
             });
 
-            dual.send(['host1']);
+            d.send(['host1']);
         });
 
     });
 
     describe('mounted tree', function () {
 
-        var dual = dualproto();
-
         it('should be possible to mount hosts in a tree structure', function (done) {
-            dual.mount([], {
+            d.mount([], {
                 host: function () {
                     done();
                 }
             });
-            dual.send(['host']);
+            d.send(['host']);
         });
 
         it('should be possible to mount host trees directly', function (done) {
-            dual.mount({
+            d.mount({
                 go: function () {
                     done();
                 }
             });
-            dual.send(['go']);
+            d.send(['go']);
         });
 
 
         it('should be possible to mount hosts in a tree structure below a static trunk', function (done) {
-            dual.mount(['cookie'], {
+            d.mount(['cookie'], {
                 sword: function () {
                     done();
                 }
             });
-            dual.send(['cookie', 'sword']);
+            d.send(['cookie', 'sword']);
         });
 
         it('should be possible to mount deep tree structure', function (done) {
-            dual.mount([], {
+            d.mount([], {
                 treat: {
                     grass: function () {
                         done();
                     }
                 }
             });
-            dual.send(['treat', 'grass']);
+            d.send(['treat', 'grass']);
         });
 
         it('should be possible to mount deep tree structure under a static root', function (done) {
-            dual.mount(['phew'], {
+            d.mount(['phew'], {
                 come: {
                     around: function () {
                         done();
                     }
                 }
             });
-            dual.send(['phew', 'come', 'around']);
+            d.send(['phew', 'come', 'around']);
         });
 
         it('should be possible to mount multiple deep tree structures', function (done) {
             var called = [];
-            dual.mount([], {
+            d.mount([], {
                 huh: {
                     pizza: function () {
                         called.push('pizza');
@@ -214,13 +211,13 @@ describe('dualproto', function () {
                 }
             });
 
-            dual.send(['huh', 'pizza']);
-            dual.send(['no', 'more']);
+            d.send(['huh', 'pizza']);
+            d.send(['no', 'more']);
         });
 
-        it('should be possible to mount array', function (done) {
+        it('should be possible to mount array', function () {
             var called = [];
-            dual.mount(['yeah'], [
+            d.mount(['yeah'], [
                 function () {
                     called.push('dragon');
                 }
@@ -229,15 +226,13 @@ describe('dualproto', function () {
                 }
             ]);
 
-            dual.send(['yeah']).then(function () {
-                assert.deepEqual(['dragon', 'drag-on'], called);
-                done();
-            });
+            d.send(['yeah']);
+            assert.deepEqual(['dragon', 'drag-on'], called);
         });
 
-        it('should be possible to mount nested array', function (done) {
+        it('should be possible to mount nested array', function () {
             var called = [];
-            dual.mount([], {
+            d.mount([], {
                 juicy: {
                     apple:[
                         function () {
@@ -250,10 +245,8 @@ describe('dualproto', function () {
                 }
             });
 
-            dual.send(['juicy', 'apple']).then(function () {
-                assert.deepEqual(['no', 'acceptable'], called);
-                done();
-            });
+            d.send(['juicy', 'apple']);
+            assert.deepEqual(['no', 'acceptable'], called);
         });
 
     });
