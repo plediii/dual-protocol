@@ -163,6 +163,12 @@ describe('dualproto', function () {
             d.send(['go']);
         });
 
+        it('should be possible to mount root host as a string', function (done) {
+            d.mount('go', function () {
+                    done();
+            });
+            d.send(['go']);
+        });
 
         it('should be possible to mount hosts in a tree structure below a static trunk', function (done) {
             d.mount(['cookie'], {
