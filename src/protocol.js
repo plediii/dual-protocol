@@ -19,62 +19,7 @@ var Message = function (options) {
 };
 
 _.extend(Message.prototype, {
-    send: function (to, from, body, options) {
-        return this.domain.send(to, from, body, options);
-    }
-    , get: function (to, body, options) {
-        var _this = this;
-        return _this.domain.get(to, body, options);
-    }
-    , request: function (to, body, options) {
-        return this.domain.request(to, body, options);
-    }
-    , proxy: function (to, options) {
-        var _this = this;
-        return _this.get(to, _this.body, _.extend({}, _this.options, options));
-    }
-    , reply: function (body, options) {
-        options = _.defaults({}, options, { statusCode: '200' });
-        var _this = this;
-        return _this.send(_this.from, _this.to, body, options);
-    }
-    , replyPromise: function (p) {
-        var _this = this;
-        return Promise.resolve(p)
-            .then(function (msg) {
-                return _this.reply(msg.message || msg, { statusCode: msg.statusCode || '200' });
-            })
-            .catch(function (msg) {
-                return _this.reply(msg.message || msg, { statusCode: msg.statusCode || '500' });
-            });
-
-    }
-    , forward: function (to, options) {
-        var _this = this;
-        return _this.send(to, _this.from, _this.body, _.extend({}, _this.options, options));
-    }
-    , transfer: function (mount, socket, options) {
-        var _this = this;
-        socket.emit('dual', {
-            to: _this.to.slice(mount.length)
-            , from: _this.from
-            , body: _this.body
-            , options: _.extend({}, _this.options, options)
-        });
-    }
-    , error: function (message) {
-        var _this = this;
-        _this.send(['error'].concat(_this.to), [], {
-            message: message
-            , ctxt: {
-                to: _this.to
-                , from: _this.from
-                , body: _this.body
-                , options: _this.options
-            }
-        });
-    }
-    , toJSON: function () {
+    toJSON: function () {
         return _.pick(this, 'to', 'from', 'body', 'options');
     }
     , parent: function (n) {
@@ -169,12 +114,7 @@ _.extend(Domain.prototype, {
         }
         else if (_.isObject(host)) {
             _.each(host, function (f, n) {
-                if (_.isObject(f)) {
-                    _this.mount(point.concat(n), f);
-                }
-                else {
-                    mountParametrized(_this, point.concat(n), f);
-                }
+                _this.mount(point.concat(n), f);
             });
         }
         return _this;
