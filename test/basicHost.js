@@ -47,6 +47,16 @@ describe('dualproto', function () {
             assert(!d.send(['wad']));
         });
 
+        it('should silently ignore empty destinations', function () {
+            d.mount(['**'], function () {});
+            assert(!d.send([]));
+        });
+
+        it('should silently ignore null destinations', function () {
+            d.mount(['**'], function () {});
+            assert(!d.send(null));
+        });
+
     });
     
     describe('mounted host', function () {
