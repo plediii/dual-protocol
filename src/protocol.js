@@ -4,7 +4,7 @@
 
 var _ = require('lodash');
 var HevEmitter = require('hevemitter').EventEmitter;
-var inherits = require('util').inherits;
+var inherits = require('inherits');
 var Promise = require('bluebird');
 var uid = require('./uid');
 
@@ -86,7 +86,8 @@ var Domain = function (options) {
 inherits(Domain, HevEmitter);
 
 _.extend(Domain.prototype, {
-    mount: function (point, host) {
+    Message: Message
+    , mount: function (point, host) {
         var _this = this;
 
         if (arguments.length < 2)
@@ -127,7 +128,7 @@ _.extend(Domain.prototype, {
         if (!to || to.length < 1) {
             return;
         }
-        return _this.emit(to, body, new Message({
+        return _this.emit(to, body, new _this.Message({
             domain: _this
             , to: to
             , from: from
@@ -161,19 +162,32 @@ _.extend(Domain.prototype, {
     }
 });
 
-var proto = module.exports = function () {
-    return new Domain();
+
+var makeConstructor = function (Domain) {
+    var constructor = function (options) {
+        return new Domain(options);
+    };
+
+    constructor.use = function (extender) {
+
+        var NewDomain = function (options) {
+            Domain.call(this, options);
+        };
+        inherits(NewDomain, Domain);
+
+        var Message = Domain.prototype.Message;
+        var NewMessage = function (options) {
+            Message.call(this, options);
+        };
+        inherits(NewMessage, Message);
+        NewDomain.prototype.Message = NewMessage;
+
+        extender(NewDomain)
+        return makeConstructor(NewDomain);
+    };
+    return constructor;
 };
 
-_.extend(module.exports, {
-    Message: Message
-    , use: function (extender) {
-        extender({
-            Domain: Domain
-            , Message: Message
-        });
-        return proto;
-    }
-});
+module.exports = makeConstructor(Domain);
 
 
