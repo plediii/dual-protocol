@@ -127,7 +127,22 @@ describe('dualproto', function () {
             domain.send(['hey']);
         });
 
-        // test that waitfor uses the extended message type
+
+        it('should extend the context returned by waitfor', function (done) {
+            var api = dualproto.use(function (Domain) {
+                Domain.prototype.Message.prototype.cutout = function () {
+                    done();
+                };
+            });
+            var domain = api(); 
+            domain.waitFor(['hey'])
+            .then(function (ctxt) {
+                ctxt.cutout();
+            });
+            domain.send(['hey']);
+        });
+
+
 
     });
 
