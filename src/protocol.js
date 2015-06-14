@@ -8,7 +8,7 @@ var inherits = require('util').inherits;
 var Promise = require('bluebird');
 var uid = require('./uid');
 
-var MessageContext = function (options) {
+var Message = function (options) {
     var _this = this;
     _.extend(_this, _.defaults(_.pick(options, 'domain', 'to', 'from', 'body', 'options')
                               , {
@@ -18,7 +18,7 @@ var MessageContext = function (options) {
                               }));
 };
 
-_.extend(MessageContext.prototype, {
+_.extend(Message.prototype, {
     send: function (to, from, body, options) {
         return this.domain.send(to, from, body, options);
     }
@@ -189,7 +189,7 @@ _.extend(Domain.prototype, {
         if (!to || to.length < 1) {
             return;
         }
-        return _this.emit(to, body, new MessageContext({
+        return _this.emit(to, body, new Message({
             domain: _this
             , to: to
             , from: from
@@ -220,7 +220,7 @@ _.extend(Domain.prototype, {
                     if (options.timeout > 0) {
                         timer = setTimeout(function () {
                             domain.removeListener(from, receiver);
-                            resolve(new MessageContext({
+                            resolve(new Message({
                                 options: {
                                     statusCode: '408'
                                 }
@@ -231,13 +231,13 @@ _.extend(Domain.prototype, {
                         if (timer) {
                             clearTimeout(timer);
                         }
-                        resolve(new MessageContext(ctxt));
+                        resolve(new Message(ctxt));
                     };
                     domain.once(from, receiver);
                     return domain.send(to, from, body, options)
                         .then(function (called) {
                             if (!called) {
-                                return resolve(new MessageContext({
+                                return resolve(new Message({
                                     options: {
                                         statusCode: '503'
                                     }
@@ -306,7 +306,7 @@ _.extend(Domain.prototype, {
                 if (timer) {
                     clearTimeout(timer);
                 }
-                resolve(new MessageContext(ctxt));
+                resolve(new Message(ctxt));
             };
             domain.once(route, receiver);
             if (options.timeout > 0) {
@@ -324,7 +324,7 @@ module.exports = function () {
 };
 
 _.extend(module.exports, {
-    MessageContext: MessageContext
+    Message: Message
     , synchOption: function (name, fetch) {
         var cache = {};
         return function (ctxt, next) {
