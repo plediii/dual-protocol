@@ -149,7 +149,7 @@ _.extend(Domain.prototype, {
                 if (timer) {
                     clearTimeout(timer);
                 }
-                resolve(new Message(ctxt));
+                resolve(new _this.Message(ctxt));
             };
             domain.once(route, receiver);
             if (options.timeout > 0) {
