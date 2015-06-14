@@ -1,9 +1,11 @@
 /*jslint node: true */
 "use strict";
 
-var dualproto = require('../index');
 var _ = require('lodash');
 var assert = require('assert');
+
+var dualproto = require('../index');
+var Message = dualproto().Message;
 
 describe('dualproto', function () {
     
@@ -92,7 +94,7 @@ describe('dualproto', function () {
                 assert.deepEqual(ctxt.from, ['owner']);
                 assert.equal(ctxt.body.recreational, 'vehicle');
                 assert.equal(ctxt.options.yo, 'appointment');
-                assert(ctxt instanceof dualproto.Message);
+                assert(ctxt instanceof Message);
                 done();
             })
             .catch(function (err) {

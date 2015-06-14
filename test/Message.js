@@ -6,13 +6,14 @@ var _ = require('lodash');
 var assert = require('assert');
 
 var dualproto = require('../index');
+var Message = dualproto().Message;
 
 describe('dualproto', function () {
     
     describe('Message', function () {
 
         it('should provide defaults for each dual-protocol parameter except body', function () {
-            var ctxt = new dualproto.Message({});            
+            var ctxt = new Message({});
             assert.deepEqual(ctxt.to, []);
             assert.deepEqual(ctxt.from, []);
             assert(_.isObject(ctxt.options));
@@ -20,7 +21,7 @@ describe('dualproto', function () {
         });
 
         it('should consist of only dual message in toJSON', function () {
-            var ctxt = new dualproto.Message({
+            var ctxt = new Message({
                 domain: { twenty: 'years'}
                 , to: ['vice', 'president']
                 , from: ['senate']
@@ -39,28 +40,28 @@ describe('dualproto', function () {
         describe('.parent', function (ctxt) {
 
             it('should return the route up to destination', function () {
-                var ctxt = new dualproto.Message({
+                var ctxt = new Message({
                     to: ['play', 'him', 'off']
                 });
                 assert.deepEqual(ctxt.parent(), ['play', 'him']);
             });
 
             it('should be trivial if parent(0)', function () {
-                var ctxt = new dualproto.Message({
+                var ctxt = new Message({
                     to: ['play', 'him', 'off']
                 });
                 assert.deepEqual(ctxt.parent(0), ['play', 'him', 'off']);
             });
 
             it('should return the parent parent when given 2', function () {
-                var ctxt = new dualproto.Message({
+                var ctxt = new Message({
                     to: ['play', 'him', 'off']
                 });
                 assert.deepEqual(ctxt.parent(2), ['play']);
             });
 
             it('should throw exception when given parent depth greater than destination', function () {
-                var ctxt = new dualproto.Message({
+                var ctxt = new Message({
                     to: ['play', 'him', 'off']
                 });
                 assert.throws(function () {
