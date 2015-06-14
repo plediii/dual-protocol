@@ -104,12 +104,7 @@ _.extend(Domain.prototype, {
         }
         else if (_.isArray(host)) {
             _.each(host, function (f) {
-                if (_.isFunction(f)) {
-                    mountParametrized(_this, point, f);
-                }
-                else {
-                    _this.mount(point, f);
-                }
+                _this.mount(point, f);
             });
         }
         else if (_.isObject(host)) {
