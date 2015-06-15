@@ -53,10 +53,10 @@ domain.uid().then(function (mailbox) {
 My temporary mailbox just received:  mail!
 */
 
-var api = dualproto.use(function (dualproto) {
-  dualproto.Message.prototype.reply = function (body) {
-     this.domain.send(this.from, [], body);
-  };
+var api = dualproto.use(function (Domain) {
+    Domain.prototype.Message.prototype.reply = function (body) {
+        this.domain.send(this.from, [], body);
+    };
 });
 var domain = api();
 domain.mount(['responder'], function (body, ctxt) {
