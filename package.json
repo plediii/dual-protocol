@@ -1,6 +1,6 @@
 {
   "name": "dual-protocol",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Protocol layer for dual-api",
   "private": false,
   "main": "index.js",
