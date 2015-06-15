@@ -69,7 +69,7 @@ describe('dualproto', function () {
                     done();
                 }
             })
-            assert(d.send(['fans']));
+            assert(d.send(['big']));
         });
     });
     

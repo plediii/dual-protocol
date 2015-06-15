@@ -21,7 +21,6 @@ module.exports = function (Domain) {
 
     Domain.prototype.Message.prototype.send = function () {
         var domain = this.domain;
-        console.log('conveniently sending on domain ', domain);
         return domain.send.apply(domain, arguments);
     };
 };
