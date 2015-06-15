@@ -166,8 +166,8 @@ dual-protocol; creating an API:
 ```javascript
 var dualproto = require('dual-protocol');
 var api = dualproto.use(function (dualproto) {
-  dualproto.Message.prototype.reply = function (body) {
-     this.domain.send(this.from, [], body);
+  Domain.prototype.Message.prototype.reply = function (body) {
+      this.domain.send(this.from, [], body);
   };
 });
 var domain = api();
