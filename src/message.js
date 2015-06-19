@@ -2,7 +2,7 @@
 /* global -Promise */
 "use strict";
 
-var _ = require('lodash');
+var _ = require('./lodash');
 
 var Message = module.exports = function (options) {
     var _this = this;

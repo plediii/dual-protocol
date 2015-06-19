@@ -2,7 +2,7 @@
 /* global -Promise */
 "use strict";
 
-var _ = require('lodash');
+var _ = require('./lodash');
 
 var mountParametrized = function (domain, point, host) {
     var params = [];

@@ -2,7 +2,6 @@
 /* global -Promise */
 "use strict";
 
-var _ = require('lodash');
 var inherits = require('inherits');
 
 var Message = require('./message');

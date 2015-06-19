@@ -2,7 +2,7 @@
 /* global -Promise */
 "use strict";
 
-var _ = require('lodash');
+var _ = require('./lodash');
 
 module.exports = function (Domain) {
     Domain.prototype.send = function (to, from, body, options) {

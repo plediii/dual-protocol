@@ -3,7 +3,7 @@
 "use strict";
 
 var Promise = require('bluebird');
-var _ = require('lodash');
+var _ = require('./lodash');
 
 module.exports = function (Domain) {
     Domain.prototype.waitFor = function (route, options) {

@@ -5,7 +5,7 @@
 var crypto = require('crypto');
 var cryptoSupport = false;
 var Promise = require('bluebird');
-var _ = require('lodash');
+var _ = require('./lodash');
 
 try {
     var rand = crypto.rng(10);
