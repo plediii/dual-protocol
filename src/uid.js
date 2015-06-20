@@ -2,10 +2,10 @@
 /* global -Promise */
 "use strict";
 
+var Promise = require('./Promise');
+var _ = require('./lodash');
 var crypto = require('crypto');
 var cryptoSupport = false;
-var Promise = require('bluebird');
-var _ = require('./lodash');
 
 try {
     var rand = crypto.rng(10);
