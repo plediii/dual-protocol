@@ -2,10 +2,12 @@
 /* global -Promise */
 "use strict";
 
-var Promise = require('bluebird');
 var _ = require('./lodash');
+var Promise = require('./Promise');
 
 module.exports = function (Domain) {
+
+
     Domain.prototype.waitFor = function (route, options) {
         var _this = this;
         var domain = _this;
