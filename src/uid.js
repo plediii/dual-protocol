@@ -13,25 +13,6 @@ if (!cryptoSupport) {
     console.error('Crypto RNG is not available: ', e);
 }
 
-var generateUid = function (length, cb) {
-    return randomBytes(length, function (err, buf) {
-        if (err) {
-            return cb(err)
-        } else {
-            cb(null, toString(buf))
-        }
-    });
-};
-
-
-try {
-    randomBytes;
-    cryptoSupport = true;
-}
-catch (e) {
-
-}
-
 var digest = function (a) {
     var shasum = createHash('sha256');
     shasum.update(a);
