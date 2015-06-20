@@ -7,16 +7,24 @@ var _ = require('./lodash');
 module.exports = function (Domain) {
     Domain.prototype.send = function (to, from, body, options) {
         var _this = this;
-        if (!to || to.length < 1) {
-            return;
+        var msg;
+        if (_.isArray(to) || _.isString(to)) {
+            msg = new _this.Message({
+                domain: _this
+                , to: to
+                , from: from
+                , body: body
+                , options: options
+            });
+        } else {
+            msg = new _this.Message(_.extend({}, to, {
+                domain: _this
+            }));
         }
-        return _this.emit(to, body, new _this.Message({
-            domain: _this
-            , to: to
-            , from: from
-            , body: body
-            , options: options
-        }));
+        if (!msg.to || msg.to.length < 1) {
+            return void 0;
+        }
+        return _this.emit(msg.to, msg.body, msg);
     };
 
     Domain.prototype.Message.prototype.send = function () {
