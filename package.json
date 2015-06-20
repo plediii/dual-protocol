@@ -34,9 +34,11 @@
     "tape": "^4.0.0"
   },
   "dependencies": {
+    "base64-url": "^1.2.1",
     "bluebird": "^2.2.2",
+    "create-hash": "^1.1.1",
     "hevemitter": "^1.2.0",
     "inherits": "^2.0.1",
-    "uid-safe": "^1.0.2"
+    "randombytes": "^2.0.1"
   }
 }
