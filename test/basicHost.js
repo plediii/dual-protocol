@@ -94,12 +94,41 @@ describe('dualproto', function () {
             d.send(['guiness']);
         });
 
+        it('should be called with ctxt.domain', function (done) {
+            d.mount(['hostA'], function (body, ctxt) {
+                assert.equal(d, ctxt.domain);
+                done();
+            });
+            d.send(['hostA']);
+        });
+
+        it('should be called with ctxt.domain (on object)', function (done) {
+            d.mount(['hostA'], function (body, ctxt) {
+                assert.equal(d, ctxt.domain);
+                done();
+            });
+            d.send({ 
+                to: ['hostA']
+            });
+        });
+
+
         it('should be called with ctxt.to', function (done) {
             d.mount(['hostA'], function (body, ctxt) {
                 assert.deepEqual(ctxt.to, ['hostA']);
                 done();
             });
             d.send(['hostA']);
+        });
+
+        it('should be called with ctxt.to (on object)', function (done) {
+            d.mount(['hostA'], function (body, ctxt) {
+                assert.deepEqual(ctxt.to, ['hostA']);
+                done();
+            });
+            d.send({
+                to: ['hostA']
+            });
         });
 
         it('should be called with ctxt.from', function (done) {
@@ -110,12 +139,34 @@ describe('dualproto', function () {
             d.send(['hostB'], ['sourceA']);
         });
 
+        it('should be called with ctxt.from (on object)', function (done) {
+            d.mount(['hostB'], function (body, ctxt) {
+                assert.deepEqual(ctxt.from, ['sourceA']);
+                done();
+            });
+            d.send({
+                to: ['hostB']
+                , from: ['sourceA']
+            });
+        });
+
         it('should be called with undefined body when no body is provided', function (done) {
             d.mount(['hostC'], function (body, ctxt) {
                 assert(_.isUndefined(body));
                 done();
             });
             d.send(['hostC'], ['sourceB']);
+        });
+
+        it('should be called with undefined body when no body is provided (on object)', function (done) {
+            d.mount(['hostC'], function (body, ctxt) {
+                assert(_.isUndefined(body));
+                done();
+            });
+            d.send({
+                to: ['hostC']
+                , from: ['sourceB']
+            });
         });
 
         it('should be called with body when one is provided', function (done) {
@@ -126,6 +177,19 @@ describe('dualproto', function () {
             d.send(['hostD'], [], {a: 1});
         });
 
+        it('should be called with body when one is provided (on object)', function (done) {
+            d.mount(['hostD'], function (body, ctxt) {
+                assert.deepEqual(ctxt.body, {a: 1});
+                done();
+            });
+            d.send({
+                to: ['hostD']
+                , from: []
+                , body: {a: 1}
+            });
+        });
+
+
         it('should be called same body on ctxt and arg', function (done) {
             d.mount(['hostD'], function (body, ctxt) {
                 assert.equal(body, ctxt.body);
@@ -134,6 +198,17 @@ describe('dualproto', function () {
             d.send(['hostD'], [], {a: 1});
         });
 
+        it('should be called same body on ctxt and arg (on object)', function (done) {
+            d.mount(['hostD'], function (body, ctxt) {
+                assert.equal(body, ctxt.body);
+                done();
+            });
+            d.send({
+                to: ['hostD']
+                , from: []
+                , body: {a: 1}
+            });
+        });
 
         it('should be called with options even when not provided', function (done) {
             d.mount(['hostD'], function (body, ctxt) {
@@ -143,12 +218,37 @@ describe('dualproto', function () {
             d.send(['hostD'], [], {a: 1});
         });
 
+        it('should be called with options even when not provided (on object)', function (done) {
+            d.mount(['hostD'], function (body, ctxt) {
+                assert(_.isObject(ctxt.options));
+                done();
+            });
+            d.send({
+                to: ['hostD']
+                , from: []
+                , body: {a: 1}
+            });
+        });
+
         it('should be called with provided options', function (done) {
             d.mount(['hostD'], function (body, ctxt) {
                 assert.deepEqual(ctxt.options, {a: 2});
                 done();
             });
             d.send(['hostD'], [], {a: 1}, {a: 2});
+        });
+
+        it('should be called with provided options (on object)', function (done) {
+            d.mount(['hostD'], function (body, ctxt) {
+                assert.deepEqual(ctxt.options, {a: 2});
+                done();
+            });
+            d.send({
+                to: ['hostD']
+                , from: []
+                , body: {a: 1}
+                , options: {a: 2}
+            });
         });
 
         it('should NOT be triggered on target message for other hosts', function (done) {
