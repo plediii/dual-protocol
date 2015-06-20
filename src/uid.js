@@ -4,29 +4,31 @@
 
 var Promise = require('./Promise');
 var _ = require('./lodash');
-var crypto = require('crypto');
-var cryptoSupport = false;
+var createHash = require('create-hash');
+var escape = require('base64-url').escape;
+var randomBytes = Promise.promisify(require('randombytes'));
 
-try {
-    var rand = crypto.rng(10);
-    cryptoSupport = true;
-}
-catch (e) {
+var cryptoSupport = true;       // whether or not the javascript engine has a cryptographically secure number generator
+if (!cryptoSupport) {
     console.error('Crypto RNG is not available: ', e);
 }
 
 var digest = function (a) {
-    var shasum = crypto.createHash('sha256');
+    var shasum = createHash('sha256');
     shasum.update(a);
     return shasum.digest('hex');
 };
 
+var toString = function (buf) {
+  return escape(buf.toString('base64'));
+}
+
 var keygen = (function () {
     var keylen = 48;
     if (cryptoSupport) {
-        var uidsafe = Promise.method(require('uid-safe'));
         return function () {
-            return uidsafe(keylen);
+            return randomBytes(keylen)
+            .then(toString);
         };
     }
     else {
