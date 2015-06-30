@@ -6,14 +6,15 @@ var inherits = require('inherits');
 
 var Message = require('./message');
 var Domain = require('./domain');
+var _ = require('./lodash');
 
-var makeConstructor = function (Domain) {
+var makeConstructor = function (Domain, libs) {
     var constructor = function (options) {
         return new Domain(options);
     };
 
     constructor.use = function (extender) {
-
+        var newLibs = _.clone(libs);
         var NewDomain = function (options) {
             Domain.call(this, options);
         };
@@ -26,8 +27,8 @@ var makeConstructor = function (Domain) {
         inherits(NewMessage, Message);
         NewDomain.prototype.Message = NewMessage;
 
-        extender(NewDomain)
-        return makeConstructor(NewDomain);
+        extender(NewDomain, newLibs)
+        return makeConstructor(NewDomain, newLibs);
     };
     return constructor;
 };
@@ -40,6 +41,15 @@ require('./uid')(Domain);
 require('./unmount')(Domain);
 require('./waitFor')(Domain);
 
-module.exports = makeConstructor(Domain)
+
+module.exports = makeConstructor(Domain, {})
+.use(require('./lodashLib'))
+.use(require('./promiseLib'))
+.use(require('./mount'))
+.use(require('./send'))
+.use(require('./uid'))
+.use(require('./unmount'))
+.use(require('./waitFor'));
+
 
 
