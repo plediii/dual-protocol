@@ -142,6 +142,32 @@ describe('dualproto', function () {
             domain.send(['hey']);
         });
 
+        it('should be called with a libs object', function (done) {
+           dualproto.use(function (Domain, libs) {
+               assert(_.isObject(libs));
+               done();
+            });
+        });
+
+        it('should provide libs attributes to descendants', function (done) {
+           dualproto.use(function (Domain, libs) {
+               libs.wizard = 'robe';
+            })
+            .use(function (Domain, libs) {
+                assert.equal(libs.wizard, 'robe');
+                done();
+            });
+        });
+
+        it('should not overide libs attributes in siblings', function (done) {
+           dualproto.use(function (Domain, libs) {
+               libs.wizard = 'robe';
+            });
+            dualproto.use(function (Domain, libs) {
+                assert(!libs.hasOwnProperty('wizard'));
+                done();
+            });
+        });
 
 
     });
