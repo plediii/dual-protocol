@@ -1,6 +1,6 @@
 {
   "name": "dual-protocol",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Protocol layer for dual-api",
   "private": false,
   "main": "index.js",
@@ -37,7 +37,7 @@
     "base64-url": "^1.2.1",
     "bluebird": "^2.2.2",
     "create-hash": "^1.1.1",
-    "hevemitter": "^1.2.0",
+    "hevemitter": "^1.4.0",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.1"
   }
