@@ -4,6 +4,15 @@
 
 var _ = require('./lodash');
 
+var tryEmit = function (domain, to, body, msg) {
+    try {
+        return domain.emit(to, body, msg);
+    } catch (ex) {
+        console.error('Uncaught send exception: ', ex);
+        return true;
+    }
+};
+
 module.exports = function (Domain) {
     Domain.prototype.send = function (to, from, body, options) {
         var _this = this;
@@ -24,7 +33,7 @@ module.exports = function (Domain) {
         if (!msg.to || msg.to.length < 1) {
             return void 0;
         }
-        return _this.emit(msg.to, msg.body, msg);
+        return tryEmit(this, msg.to, msg.body, msg);
     };
 
     Domain.prototype.Message.prototype.send = function () {

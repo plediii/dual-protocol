@@ -57,6 +57,13 @@ describe('dualproto', function () {
             assert(!d.send(null));
         });
 
+        it('should return false when destination throws', function () {
+            d.mount(['**'], function () {
+                throw new Error('Bang!');
+            });
+            assert(d.send(['blah']));
+        });
+
     });
 
     describe('Message.send', function () {
