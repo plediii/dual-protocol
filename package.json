@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "ci-test": "istanbul cover _mocha -- -R tap \"./test/*.js\" > test.tap && istanbul report clover"
+    "ci-test": "istanbul cover _mocha -- -R tap \"./test/*.js\" > test.tap && istanbul report clover",
+    "lint": "jshint *.js src/*.js test/*.js"
   },
   "repository": {
     "type": "git",
@@ -25,12 +26,11 @@
     "url": "https://github.com/plediii/dual-protocol/issues"
   },
   "devDependencies": {
-    "gulp": "^3.8.10",
-    "gulp-jshint": "^1.9.0",
     "istanbul": "^0.3.14",
-    "jshint-stylish": "^1.0.0",
+    "jshint": "^2.8.0",
     "lodash": "^3.9.3",
     "mocha": "^1.21.4",
+    "pre-commit": "^1.1.1",
     "tape": "^4.0.0"
   },
   "dependencies": {
@@ -40,5 +40,8 @@
     "hevemitter": "^1.4.1",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.1"
-  }
+  },
+  "pre-commit": [
+    "lint"
+  ]
 }

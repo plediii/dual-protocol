@@ -8,11 +8,6 @@ var createHash = require('create-hash');
 var escape = require('base64-url').escape;
 var randomBytes = Promise.promisify(require('randombytes'));
 
-var cryptoSupport = true;       // whether or not the javascript engine has a cryptographically secure number generator
-if (!cryptoSupport) {
-    console.error('Crypto RNG is not available: ', e);
-}
-
 var digest = function (a) {
     var shasum = createHash('sha256');
     shasum.update(a);
@@ -21,27 +16,27 @@ var digest = function (a) {
 
 var toString = function (buf) {
   return escape(buf.toString('base64'));
-}
+};
 
 var keygen = (function () {
     var keylen = 48;
-    if (cryptoSupport) {
-        return function () {
-            return randomBytes(keylen)
+    return function () {
+        return randomBytes(keylen)
             .then(toString);
-        };
-    }
-    else {
-        return function () {
-            var u = '';
-            var d = Date.now();
-            for (var i = 0; i < keylen; i++) {
-                u += (((d + Math.random() * 16) % 16) | 0).toString(16);
-                d = Math.floor(d/16);
-            }
-            return Promise.resolve(u);
-        };
-    }
+    };
+    // if (cryptoSupport) {
+    // }
+    // else {
+    //     return function () {
+    //         var u = '';
+    //         var d = Date.now();
+    //         for (var i = 0; i < keylen; i++) {
+    //             u += (((d + Math.random() * 16) % 16) | 0).toString(16);
+    //             d = Math.floor(d/16);
+    //         }
+    //         return Promise.resolve(u);
+    //     };
+    // }
 })();
 
 // would be awesome if this was secure

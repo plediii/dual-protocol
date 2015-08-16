@@ -75,7 +75,7 @@ describe('dualproto', function () {
                 , fans: function () {
                     done();
                 }
-            })
+            });
             assert(d.send(['big']));
         });
     });
@@ -381,7 +381,7 @@ describe('dualproto', function () {
                         called.push('dragon');
                     }
                 }
-            ]);;
+            ]);
             d.send(['yeah', 'valentine']);
             assert.deepEqual(['dragon'], called);
         });
