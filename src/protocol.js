@@ -27,7 +27,7 @@ var makeConstructor = function (Domain, libs) {
         inherits(NewMessage, Message);
         NewDomain.prototype.Message = NewMessage;
 
-        extender(NewDomain, newLibs)
+        extender(NewDomain, newLibs);
         return makeConstructor(NewDomain, newLibs);
     };
     return constructor;
