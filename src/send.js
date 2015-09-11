@@ -8,7 +8,7 @@ var tryEmit = function (domain, to, body, msg) {
     try {
         return domain.emit(to, body, msg);
     } catch (ex) {
-        console.error('Uncaught send exception: ', ex);
+        console.error('Uncaught send exception: ', ex, ex.stack);
         return true;
     }
 };
