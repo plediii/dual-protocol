@@ -17,7 +17,8 @@ in concept to HTTP requests.  Dual protocol messages consist in:
 
 The destination address names a resource controlled by a host function
 mounted on the dual-protocol domain.  Under the hood, the destination
-address is a HevEmitter event, which is lists of strings.  
+address is a HevEmitter event, which is a list of strings representing the
+heirarchical event.
 
 The entity associated with the message is expressed by the optional
 body.  Messages without bodies can be interpreted like HTTP GET or
@@ -27,7 +28,7 @@ order for the message to cross interprocess boundaries, the body must
 be JSON serializable.
 
 The optional source address provides information orthogonal to the
-body information, which the destination host canx use to create a
+body information, which the destination host can use to create a
 [layered system](http://en.wikipedia.org/wiki/Representational_state_transfer#Layered_system)
 in the RESTful sense.  The source address should also be a HevEmitter
 event.  Practically, hosts may use the source address to affect
@@ -165,7 +166,7 @@ dual-protocol; creating an API:
 
 ```javascript
 var dualproto = require('dual-protocol');
-var api = dualproto.use(function (dualproto) {
+var api = dualproto.use(function (Domain) {
   Domain.prototype.Message.prototype.reply = function (body) {
       this.domain.send(this.from, [], body);
   };
