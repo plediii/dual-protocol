@@ -24,7 +24,7 @@ The entity associated with the message is expressed by the optional
 body.  Messages without bodies can be interpreted like HTTP GET or
 HEAD requests; similarly messages with bodies may be interpreted like
 HTTP POST or PUT.  The event body should be JSON serializable.  In
-order for the message to cross interprocess boundaries, the body must
+order for the message to cross interprocess boundaries, the body MUST
 be JSON serializable.
 
 The optional source address provides information orthogonal to the
@@ -44,8 +44,8 @@ authorization tokens, body schema, classification).
 ## Constructing dual-protocol domains
 
 Any process holding a dual-protocol domain instance may send messages
-to any host in mounted on the domain.  Host functions receive a
-reference to domain on which the message was sent on each request.
+to any host mounted on the domain.  Host functions receive a
+reference to the domain on which the message was sent on each request.
 
 
 The dual-protocol module is the constructor for domain instances:
@@ -63,7 +63,7 @@ In addition to the attributes associated with dual protocol messages,
 the `dual-protocol` object will automatically parse parameters
 declared in the destination address (strings prefixed with `:`), and
 provide these in the `ctxt.params` object.  Strings prefixed with `::`
-will match the *rest* of the address.
+will match the *tail* of the address.
 
 For example the following host will record all messages
 it receives in a list.
@@ -86,21 +86,15 @@ Messages are sent to hosts mounted on the domain via  `domain.send(to, from, bod
 domain.send(['database', 'message'], [], 'Hello Alice!');
 ```
 
-Here we are using an empty source address since `'database'` is not
-attempting to make a reply, nor do we have a mounted host ready to
-receive a reply.
+Here we are using an empty source address.  Because `'database'` is not
+attempting to make a reply, no source address is necessary.
 
 In addition to the usual message properties, dual-protocol also
-attaches a reference to the domain the host received the message from
-at `ctxt.domain`.  The host may could the domain to send additional
+attaches a reference to the domain on which the host is mounted
+at `ctxt.domain`.  The host could use the domain to send additional
 messages and/or replies.  For example, the following host outputs
 information about the message to the console, and forwards a copy of
-the message to the database.
-
-The `dual-protocol` object will also attach the domain on which the
-message is sent at `ctxt.domain`.  For example the following host will
-print all messages it received, and forwards a copy of the message to
-the database:
+the message to the database host:
 ```javascript
 domain.mount(['message', ':name'], function (body, ctxt) {
     console.log(ctxt.from.join('/') + ' sent a message to ' + ctxt.params.name);
@@ -123,9 +117,8 @@ The message is: Hello Alice!
 
 ## Creating temporary hosts with `domain.waitFor`
 
-In several cases, it is convenient to create a host to wait for a
-single message, such as a *ready* event, or a response, without
-leaving a permanently listening host at that address.  Dual-protocol
+A common pattern is to create a temporary host to wait for a
+single message, such as a *ready* event or a request response, which is removed immediately after the event.  Dual-protocol
 provides the `domain.waitFor(event, options)` method for this purpose.  
 
 `domain.waitFor` returns a promise that will resolve when the event
@@ -139,11 +132,11 @@ domain.waitFor(['ready'], { timeout: 60 })
 
 Then we can trigger this host once, and only once, by using
 `domain.send`.  If the `timeout` option is provided, the host will be
-cancelled `timeout` seconds if provided.
+cancelled after `timeout` seconds.
 
 In order to wait for a response to a specific message, we need to
-create a unique host name that is only known only by the request
-originator.  Dual-protocol includes a unique id generator at
+create a unique host name known only by the request
+originator and receiver.  For this purpose, dual-protocol includes a unique id generator at
 `domain.uid`.  
 
 ```javascript
