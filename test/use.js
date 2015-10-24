@@ -9,6 +9,12 @@ describe('dualproto', function () {
     
     describe('use', function () {
 
+        it('should raise exception if executed with non-function', function () {
+            assert.throws(function () {
+                dualproto.use(null);
+            }, /use.*function/);
+        });
+
         it('should allow adding functions to Domain prototype', function (done) {
             var api = dualproto.use(function (Domain) {
                 Domain.prototype.cutout = function () {

@@ -7,7 +7,7 @@
   "scripts": {
     "test": "mocha",
     "ci-test": "istanbul cover _mocha -- -R tap \"./test/*.js\" > test.tap && istanbul report clover",
-    "lint": "jshint *.js src/*.js test/*.js"
+    "lint": "jshint *.js src test"
   },
   "repository": {
     "type": "git",
