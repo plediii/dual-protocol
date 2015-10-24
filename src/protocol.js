@@ -14,6 +14,9 @@ var makeConstructor = function (Domain, libs) {
     };
 
     constructor.use = function (extender) {
+        if (!_.isFunction(extender)) {
+            throw new Error('dual-protocol use must be called with an extender function, not ' + typeof extender);
+        }
         var newLibs = _.clone(libs);
         var NewDomain = function (options) {
             Domain.call(this, options);
