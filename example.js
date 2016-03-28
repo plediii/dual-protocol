@@ -16,7 +16,7 @@ domain.send(['database', 'message'], [], 'Hello Alice!');
 
 domain.mount(['message', ':name'], function (body, ctxt) {
     console.log(ctxt.from.join('/') + ' sent a message to ' + ctxt.params.name);
-    console.log('The message was received by ' + ctxt.from.join('/'));
+    console.log('The message was received by ' + ctxt.to.join('/'));
     console.log('The message is: ', ctxt.body);
     ctxt.domain.send(['database', 'message'], [], ctxt.body);
 });
