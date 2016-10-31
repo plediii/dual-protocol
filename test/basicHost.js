@@ -429,6 +429,19 @@ describe('dualproto', function () {
             assert(!d.send(['host', 'okay']));
         });
 
+        it('should not leave listeners', function () {
+            assert.equal(0, d.listeners(['host', 'okay']).length);
+            d.mount({
+                host: {
+                    okay: function () {}
+                }
+            });
+            assert.equal(1, d.listeners(['host', 'okay']).length);
+            d.unmount(['host']);
+            assert.equal(0, d.listeners(['host', 'okay']).length);
+        });
+
+
     });
 
 });
